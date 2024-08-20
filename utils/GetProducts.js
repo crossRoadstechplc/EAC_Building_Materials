@@ -12,7 +12,6 @@ async function GetProduct(bot, ctx) {
             ? product.name.slice(0, 17) + "..."
             : product.name;
         const callbackData = `product_${product.id}_${truncatedName}`;
-
         return {
           text: product.name,
           callback_data: callbackData,

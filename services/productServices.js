@@ -5,15 +5,13 @@ const buildingBaseUrl = "http://localhost:7050/api/BuildingMaterials";
 
 async function saveOffer(
   product_name,
-  region,
-  offerClass,
-  grade,
-  process,
+  brand_name,
+  status,
+  type,
+  size,
   measurement,
   quantity,
   price,
-  status,
-  sent,
   offer_type,
   user_name,
   phone_number,
@@ -24,25 +22,22 @@ async function saveOffer(
     const response = await axios.post(
       `${buildingBaseUrl}/postOffer`,
       product_name,
-      region,
-      offerClass,
-      grade,
-      process,
+      brand_name,
+      status,
+      type,
+      size,
       measurement,
       quantity,
       price,
-      status,
-      sent,
       offer_type,
       user_name,
       phone_number,
       business_type,
       chat_id
     );
-
     return response.data;
   } catch (error) {
-    console.error("error posting offer: ", error);
+    console.error("Error posting offer:", error);
     throw error;
   }
 }

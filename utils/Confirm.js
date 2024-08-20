@@ -5,6 +5,7 @@ const { resetSession } = require("./constants");
 
 async function confirmWithoutUser(ctx, session) {
   try {
+    console.log(session.productName);
     const classProperty = session.selectedValues.find(
       (val) => val.property === "Class"
     );
@@ -16,6 +17,11 @@ async function confirmWithoutUser(ctx, session) {
     );
     const regionProperty = session.selectedValues.find(
       (val) => val.property === "Region"
+    );
+
+    console.log(
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" +
+        JSON.stringify(session)
     );
 
     const offerData = {
@@ -37,7 +43,12 @@ async function confirmWithoutUser(ctx, session) {
     if (gradeProperty) offerData.grade = gradeProperty.value;
     if (regionProperty) offerData.region = regionProperty.value;
 
+    console.log("Offer Data: 12", offerData);
+
     const result = await saveOffer(offerData);
+
+    console.log("Offer Data: 77", offerData);
+
     offerData.id = result.offer.id;
 
     await sendItemToGroup(ctx, offerData, session);
