@@ -4,7 +4,11 @@ const { callbackQuery } = require("telegraf/filters");
 const { GetProduct } = require("./GetProducts");
 const { checkUser } = require("../services/userServices");
 const { fetchPropertyByProduct } = require("../services/productServices");
-const { processNextProperty, processProperty } = require("./GetProperties");
+const {
+    processNextProperty,
+    processProperty,
+    processPropertyForEdit,
+} = require("./GetProperties");
 const {
     measurementForEdit,
     measurement,
@@ -21,6 +25,10 @@ const {
     confirmUser,
 } = require("./Confirm");
 const { viewContact, viewFullContact } = require("./ViewContact");
+const {
+    fetchDependentValue,
+    fetchPropertyNamebyId,
+} = require("../services/productServices");
 
 function command(bot) {
     bot.telegram.setMyCommands([{ command: "start", description: "Start" }]);
@@ -119,9 +127,6 @@ function command(bot) {
         const { session } = ctx;
         const chatId = ctx.callbackQuery.message.chat.id;
         const messageId = ctx.callbackQuery.message.message_id;
-
-        await ctx.telegram.deleteMessage(chatId, messageId);
-
         if (data.startsWith("product_")) {
             session.isValue = false;
             const productId = data.split("_")[1];
@@ -141,12 +146,15 @@ function command(bot) {
                 ctx.reply("Failed to fetch property");
             }
         } else if (
-            data.startsWith("select_value_") &&
+            data.startsWith("edit_value_") &&
             session.step === "waitingForPropertyValueEdit"
         ) {
             console.log("object");
             console.log(session.currentPropertyIndex);
+            const propertyId = data.split("_")[2];
+            const valueId = data.split("_")[3];
             const valueName = data.split("_")[4];
+            const hasDependentValue = data.split("_")[5];
             const property = session.propertiesQueue[session.currentPropertyIndex];
             console.log("Property ", property);
             console.log(property.name);
@@ -155,7 +163,6 @@ function command(bot) {
                 (item) => item.property === property.name
             );
 
-            console.log("session.selectedValues: ", session.selectedValues);
             if (existingPropertyIndex !== -1) {
                 session.selectedValues[existingPropertyIndex].value = valueName;
                 console.log("Updated selectedValue:", {
@@ -172,14 +179,71 @@ function command(bot) {
                     value: valueName,
                 });
             }
+            if (hasDependentValue) {
+                console.log("PRODUCT ID: ", session.productId);
+                console.log("VALUEID: ", valueId);
+                const dependentValues = await fetchDependentValue(
+                    valueId,
+                    session.productId
+                );
+                console.log("DEPENDENT VALUES : ", dependentValues);
 
-            confirmEditDiscardWithoutUser(ctx, session);
+                if (dependentValues.length > 0) {
+                    const productPropertyId = dependentValues[0].productPropertyId;
+                    const propertyName = await fetchPropertyNamebyId(productPropertyId);
+                    const newPropertyNameValue =
+                        propertyName.length > 0 ? propertyName[0].name : null;
+
+                    const formattedDependentValues = dependentValues.map((value) => {
+                        const truncatedValue =
+                            Buffer.byteLength(value.value, "utf-8") > 40 ?
+                            value.value.slice(0, Math.floor(40 / 2)) + "..." :
+                            value.value;
+
+                        let callbackData = `edit_dependent_value_${value.id}_${truncatedValue}`;
+
+                        if (Buffer.byteLength(callbackData, "utf-8") > 64) {
+                            callbackData = callbackData.slice(0, Math.floor(64 / 2));
+                        }
+
+                        return {
+                            text: truncatedValue,
+                            callback_data: callbackData,
+                        };
+                    });
+
+                    const inlineKeyboard = {
+                        reply_markup: {
+                            inline_keyboard: formattedDependentValues
+                                .map((v, i) =>
+                                    i % 2 === 0 ? formattedDependentValues.slice(i, i + 2) : null
+                                )
+                                .filter(Boolean),
+                        },
+                    };
+
+                    console.log("PropertyNAMe : ", newPropertyNameValue);
+                    session.dependentValueName = newPropertyNameValue;
+
+                    const dependentMessage = await ctx.reply(
+                        `Please choose a dependent value for ${newPropertyNameValue}:`,
+                        inlineKeyboard
+                    );
+
+                    if (dependentMessage) {
+                        ctx.session.lastMessageId = dependentMessage.message_id;
+                    }
+                    return;
+                }
+            }
         } else if (
-            data.startsWith("select_value_") &&
+            data.startsWith("edit_value_") &&
             session.step === "waitingForPropertyValueEdit2"
         ) {
             console.log(session.currentPropertyIndex);
+            const valueId = data.split("_")[3];
             const valueName = data.split("_")[4];
+            const hasDependentValue = data.split("_")[5];
             const property = session.propertiesQueue[session.currentPropertyIndex];
             console.log("Property ", property);
             console.log(property.name);
@@ -204,8 +268,63 @@ function command(bot) {
                     value: valueName,
                 });
             }
+            if (hasDependentValue) {
+                console.log("PRODUCT ID: ", session.productId);
+                console.log("VALUEID: ", valueId);
+                const dependentValues = await fetchDependentValue(
+                    valueId,
+                    session.productId
+                );
+                console.log("DEPENDENT VALUES : ", dependentValues);
 
-            confirmEditDiscardWithUser(ctx, session);
+                if (dependentValues.length > 0) {
+                    const productPropertyId = dependentValues[0].productPropertyId;
+                    const propertyName = await fetchPropertyNamebyId(productPropertyId);
+                    const newPropertyNameValue =
+                        propertyName.length > 0 ? propertyName[0].name : null;
+
+                    const formattedDependentValues = dependentValues.map((value) => {
+                        const truncatedValue =
+                            Buffer.byteLength(value.value, "utf-8") > 40 ?
+                            value.value.slice(0, Math.floor(40 / 2)) + "..." :
+                            value.value;
+
+                        let callbackData = `forNewUser_edit_dependent_value_${value.id}_${truncatedValue}`;
+
+                        if (Buffer.byteLength(callbackData, "utf-8") > 64) {
+                            callbackData = callbackData.slice(0, Math.floor(64 / 2));
+                        }
+
+                        return {
+                            text: truncatedValue,
+                            callback_data: callbackData,
+                        };
+                    });
+
+                    const inlineKeyboard = {
+                        reply_markup: {
+                            inline_keyboard: formattedDependentValues
+                                .map((v, i) =>
+                                    i % 2 === 0 ? formattedDependentValues.slice(i, i + 2) : null
+                                )
+                                .filter(Boolean),
+                        },
+                    };
+
+                    console.log("PropertyNAMe : ", newPropertyNameValue);
+                    session.dependentValueName = newPropertyNameValue;
+
+                    const dependentMessage = await ctx.reply(
+                        `Please choose a dependent value for ${newPropertyNameValue}:`,
+                        inlineKeyboard
+                    );
+
+                    if (dependentMessage) {
+                        ctx.session.lastMessageId = dependentMessage.message_id;
+                    }
+                    return;
+                }
+            }
         } else if (data.startsWith("select_value_")) {
             session.isValue = true;
             const valueName = data.split("_")[4];
@@ -214,6 +333,7 @@ function command(bot) {
             const hasDependentValue = data.split("_")[5];
             const propertyName = data.split("_")[6];
 
+            console.log(valueName);
             ctx.session.valueId = valueId;
             ctx.session.valueName = valueName;
             ctx.session.propertyId = propertyId;
@@ -233,7 +353,6 @@ function command(bot) {
 
             await processNextProperty(ctx);
         } else if (data.startsWith("select_dependent_value_")) {
-            // Handle the selection of a dependent value
             const dependentValueName = data.split("_")[4];
             const dependentValueId = data.split("_")[3];
             const propertyId = data.split("_")[2];
@@ -252,7 +371,69 @@ function command(bot) {
                 value: dependentValueName,
             });
             measurement(ctx);
-            //   await processNextProperty(ctx);
+        } else if (data.startsWith("edit_dependent_value_")) {
+            const dependentValueName = data.split("_")[4];
+            const dependentValueId = data.split("_")[3];
+            const propertyId = data.split("_")[2];
+
+            ctx.session.dependentValueId = dependentValueId;
+            ctx.session.dependentValueName = dependentValueName;
+            const existingIndex = session.selectedValues.findIndex(
+                (item) => item.property === `${propertyId}`
+            );
+
+            if (existingIndex !== -1) {
+                session.selectedValues[existingIndex] = {
+                    property: `${propertyId}`,
+                    value: dependentValueName,
+                    valueId: dependentValueId,
+                };
+            } else {
+                session.selectedValues.push({
+                    property: `${propertyId}`,
+                    value: dependentValueName,
+                    valueId: dependentValueId,
+                });
+            }
+
+            console.log("Updated dependentValue:", {
+                property: `Dependent of ${propertyId}`,
+                value: dependentValueName,
+            });
+
+            confirmEditDiscardWithoutUser(ctx, session);
+        } else if (data.startsWith("forNewUser_edit_dependent_value_")) {
+            const dependentValueName = data.split("_")[5];
+            const dependentValueId = data.split("_")[4];
+            const propertyId = data.split("_")[3];
+
+            ctx.session.dependentValueId = dependentValueId;
+            ctx.session.dependentValueName = dependentValueName;
+
+            const existingIndex = session.selectedValues.findIndex(
+                (item) => item.property === `${propertyId}`
+            );
+
+            if (existingIndex !== -1) {
+                session.selectedValues[existingIndex] = {
+                    property: `${propertyId}`,
+                    value: dependentValueName,
+                    valueId: dependentValueId,
+                };
+            } else {
+                session.selectedValues.push({
+                    property: `${propertyId}`,
+                    value: dependentValueName,
+                    valueId: dependentValueId,
+                });
+            }
+
+            console.log("Updated dependentValue:", {
+                property: `Dependent of ${propertyId}`,
+                value: dependentValueName,
+            });
+
+            confirmEditDiscardWithUser(ctx, session);
         } else if (data === "piece" || data === "quintal" || data === "m3") {
             session.metrics = data;
             ctx.reply("Please enter a quantity:");
@@ -278,7 +459,6 @@ function command(bot) {
             console.log("-----------------------------------------------------");
             const propertyId = data.split("_")[2];
             const propertyName = data.split("_")[3];
-            const hasDependentValue = data.split("_")[4];
             session.propertyNameEdit = propertyName;
             console.log("Property Name:", propertyName);
             console.log("Property Id:", propertyId);
@@ -291,7 +471,7 @@ function command(bot) {
 
             if (propertyIndex !== -1) {
                 session.currentPropertyIndex = propertyIndex;
-                await processProperty(ctx, propertyIndex, true);
+                await processPropertyForEdit(ctx, propertyIndex, true);
             } else {
                 ctx.reply(`${propertyName} property not found.`);
             }
@@ -310,7 +490,7 @@ function command(bot) {
 
             if (propertyIndex !== -1) {
                 session.currentPropertyIndex = propertyIndex;
-                await processProperty(ctx, propertyIndex, true, true);
+                await processPropertyForEdit(ctx, propertyIndex, true, true);
             } else {
                 ctx.reply(`${propertyName} property not found.`);
             }
@@ -363,7 +543,7 @@ function command(bot) {
                 confirmEditDiscardOnlyUser(ctx, session);
             } else if (session.step === "waitingForEditedBusiness") {
                 confirmEditDiscardWithUser(ctx, session);
-            } else {
+            } else if (session.step === "waitingForBusinessTypeToViewContact") {
                 ctx.reply("Accept terms and condition", {
                     reply_markup: {
                         inline_keyboard: [
@@ -414,6 +594,19 @@ function command(bot) {
         } else if (data === "confirmUserToViewContact") {
             await confirmUser(ctx, session);
             await viewFullContact(bot, ctx);
+        } else if (session && session.step === "waitingForBusinessType") {
+            session.businessType = data;
+            await ctx.reply("Accept terms and condition", {
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            { text: "Accept", callback_data: "accept" },
+                            { text: "Decline", callback_data: "decline" },
+                        ],
+                    ],
+                },
+            });
+            session.step = "accept";
         }
     });
     bot.on("text", async(ctx) => {

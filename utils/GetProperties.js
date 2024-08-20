@@ -17,6 +17,7 @@ async function processProperty(
     try {
         console.log("PROPERTY DETAILS : ", property);
         const values = await fetchValueByProperty(session.productId, property.id);
+
         const formattedValues = values.map((value) => {
             const truncatedValue =
                 Buffer.byteLength(value.value, "utf-8") > 40 ?
@@ -24,7 +25,7 @@ async function processProperty(
                 value.value;
 
             let callbackData = `select_value_${property.id}_${value.id}_${truncatedValue}_${value.hasDependentValue}_${property.name}`;
-
+            console.log(callbackData);
             if (Buffer.byteLength(callbackData, "utf-8") > 64) {
                 callbackData = callbackData.slice(0, Math.floor(64 / 2));
             }
@@ -56,6 +57,75 @@ async function processProperty(
         }
 
         if (isEdit && isEdit2) {
+            session.step = "waitingForPropertyValueEdit2";
+        } else if (isEdit) {
+            console.log("RRRRRRR");
+            session.step = "waitingForPropertyValueEdit";
+        } else {
+            session.step = "waitingForPropertyValue";
+        }
+    } catch (error) {
+        console.error("Failed to fetch property values:", error);
+        ctx.reply(
+            `An error occurred while fetching values . Please try again later.`
+        );
+    }
+}
+
+async function processPropertyForEdit(
+    ctx,
+    propertyIndex,
+    isEdit = false,
+    isEdit2 = false
+) {
+    const { session } = ctx;
+    const property = session.propertiesQueue[propertyIndex];
+    console.log("property: ", property);
+
+    try {
+        console.log("PROPERTY DETAILS : ", property);
+        const values = await fetchValueByProperty(session.productId, property.id);
+        console.log("values: ", values);
+        const formattedValues = values.map((value) => {
+            const truncatedValue =
+                Buffer.byteLength(value.value, "utf-8") > 40 ?
+                value.value.slice(0, Math.floor(40 / 2)) + "..." :
+                value.value;
+
+            let callbackData = `edit_value_${property.id}_${value.id}_${truncatedValue}_${value.hasDependentValue}_${property.name}`;
+            console.log(callbackData);
+            if (Buffer.byteLength(callbackData, "utf-8") > 64) {
+                callbackData = callbackData.slice(0, Math.floor(64 / 2));
+            }
+
+            return {
+                text: truncatedValue, // Display truncated value if necessary
+                callback_data: callbackData,
+            };
+        });
+
+        const formattedButtons = [];
+        for (let i = 0; i < formattedValues.length; i += 2) {
+            formattedButtons.push(formattedValues.slice(i, i + 2));
+        }
+
+        const inlineKeyboard = {
+            reply_markup: {
+                inline_keyboard: formattedButtons,
+            },
+        };
+
+        const sentMessage = await ctx.reply(
+            `Choose a value for ${property.name}:`,
+            inlineKeyboard
+        );
+        session.propertyName = property.name;
+        if (sentMessage) {
+            ctx.session.lastMessageId = sentMessage.message_id;
+        }
+
+        if (isEdit && isEdit2) {
+            console.log("TTTTTTTTTT");
             session.step = "waitingForPropertyValueEdit2";
         } else if (isEdit) {
             console.log("RRRRRRR");
@@ -190,4 +260,8 @@ async function processNextProperty(ctx) {
     }
 }
 
-module.exports = { processProperty, processNextProperty };
+module.exports = {
+    processProperty,
+    processNextProperty,
+    processPropertyForEdit,
+};
