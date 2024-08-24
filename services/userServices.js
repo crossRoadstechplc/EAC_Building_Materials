@@ -1,5 +1,6 @@
 const axios = require("axios");
-const spiceBaseUrl = "http://104.236.64.33:7050/api/UserService";
+// const spiceBaseUrl = "http://104.236.64.33:7050/api/UserService";
+const spiceBaseUrl = "http://localhost:7050/api/UserService";
 
 async function registerUser(
   name,

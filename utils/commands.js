@@ -29,9 +29,20 @@ const {
   fetchDependentValue,
   fetchPropertyNamebyId,
 } = require("../services/productServices");
+const {
+  setpreferenceuser,
+  getPreferenceProduct,
+} = require("../services/preferenceServies");
+
+let selectedProducts = [];
+const categoryId = 2;
 
 function command(bot) {
-  bot.telegram.setMyCommands([{ command: "start", description: "Start" }]);
+  bot.telegram.setMyCommands([
+    { command: "start", description: "Start" },
+
+    { command: "set_preference", description: "set-prefernece" },
+  ]);
   const phoneNumRegExp = /((^(\+251|0)(9|7)\d{2})-?\d{6})$/;
   const localSession = new LocalSession({ database: "session_db.json" });
   bot.use(localSession.middleware());
@@ -123,12 +134,44 @@ function command(bot) {
     }
   });
 
+  bot.command("set_preference", async (ctx) => {
+    const preferenceProduct = await getPreferenceProduct(categoryId);
+
+    if (preferenceProduct && preferenceProduct.length > 0) {
+      const formattedProducts = preferenceProduct.map((product) => {
+        const isSelected = selectedProducts.includes(product.id);
+        return {
+          text: `${isSelected ? "✅ " : ""}${product.name}`,
+          callback_data: `Preference_product_${product.id}`,
+        };
+      });
+
+      const formattedButtons = [];
+      for (let i = 0; i < formattedProducts.length; i += 2) {
+        formattedButtons.push(formattedProducts.slice(i, i + 2));
+      }
+
+      // Ensure the "Done" button is added correctly
+      formattedButtons.push([{ text: "Done", callback_data: "done" }]);
+
+      const inlineKeyboard = {
+        reply_markup: {
+          inline_keyboard: formattedButtons,
+        },
+      };
+
+      await ctx.reply("Choose a product:", inlineKeyboard);
+    }
+  });
+
   bot.on("callback_query", async (ctx) => {
     const { data } = ctx.callbackQuery;
     const { session } = ctx;
     const chatId = ctx.callbackQuery.message.chat.id;
     const messageId = ctx.callbackQuery.message.message_id;
     if (data.startsWith("product_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.isValue = false;
       const productId = data.split("_")[1];
       const productName = data.split("_")[2];
@@ -146,10 +189,89 @@ function command(bot) {
         console.error("Failed to fetch property: ", error);
         ctx.reply("Failed to fetch property");
       }
+    } else if (data.startsWith("Preference_product_")) {
+      const productId = parseInt(data.split("_")[2], 10); // Convert productId to an integer
+
+      console.log("Product Id: ", productId);
+      session.preferenceProductId = productId;
+
+      const preferenceProduct = await getPreferenceProduct(categoryId);
+
+      if (selectedProducts.includes(productId)) {
+        selectedProducts = selectedProducts.filter((id) => id !== productId); // Remove from selectedProducts
+      } else {
+        selectedProducts.push(productId); // Add to selectedProducts
+      }
+
+      const updatedProducts = preferenceProduct.map((product) => {
+        const isSelected = selectedProducts.includes(product.id);
+        return {
+          text: `${isSelected ? "✅ " : ""}${product.name}`,
+          callback_data: `Preference_product_${product.id}`,
+        };
+      });
+
+      const updatedButtons = [];
+      for (let i = 0; i < updatedProducts.length; i += 2) {
+        updatedButtons.push(updatedProducts.slice(i, i + 2));
+      }
+
+      // Ensure the "Done" button is added correctly
+      updatedButtons.push([{ text: "Done", callback_data: "done" }]);
+
+      // Only update if the markup has changed
+      try {
+        const currentMarkup =
+          ctx.callbackQuery.message.reply_markup.inline_keyboard;
+
+        if (JSON.stringify(updatedButtons) !== JSON.stringify(currentMarkup)) {
+          await ctx.editMessageReplyMarkup({
+            inline_keyboard: updatedButtons,
+          });
+        } else {
+          console.log("No changes to the markup"); // Debugging output
+        }
+      } catch (error) {
+        console.error("Failed to edit message:", error);
+      }
+    } else if (data === "done") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
+      const preferenceProduct = await getPreferenceProduct(categoryId);
+
+      const user = await checkUser(ctx.chat.id);
+
+      const selectedProductNames = preferenceProduct
+        .filter((product) => selectedProducts.includes(product.id))
+        .map((product) => product.name);
+
+      session.preferenceProductNames = selectedProductNames;
+      console.log(
+        "session.preferenceProductNames:  ",
+        session.preferenceProductNames
+      );
+
+      if (!user) {
+        ctx.reply("Register first and save preference");
+        ctx.reply("Enter your name");
+        session.step = "waitingForNameToSelectPreference";
+      } else {
+        console.log("userID: ", user.id);
+        session.UserID = user.id; // Ensure the session is updated with the user ID
+
+        // Loop through selectedProducts and call setpreferenceuser for each one
+        for (const productId of selectedProducts) {
+          await setpreferenceuser(user.id, categoryId, productId);
+        }
+
+        ctx.reply(`Saved Preferences: ${selectedProductNames.join(", ")}`);
+      }
     } else if (
       data.startsWith("edit_value_") &&
       session.step === "waitingForPropertyValueEdit"
     ) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       console.log("object");
       console.log(session.currentPropertyIndex);
       const propertyId = data.split("_")[2];
@@ -243,6 +365,8 @@ function command(bot) {
       data.startsWith("edit_value_") &&
       session.step === "waitingForPropertyValueEdit2"
     ) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       console.log(session.currentPropertyIndex);
       const valueId = data.split("_")[3];
       const valueName = data.split("_")[4];
@@ -331,6 +455,8 @@ function command(bot) {
         confirmEditDiscardWithUser(ctx, session);
       }
     } else if (data.startsWith("select_value_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.isValue = true;
       const valueName = data.split("_")[4];
       const valueId = data.split("_")[3];
@@ -358,6 +484,8 @@ function command(bot) {
 
       await processNextProperty(ctx);
     } else if (data.startsWith("select_dependent_value_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       const dependentValueName = data.split("_")[4];
       const dependentValueId = data.split("_")[3];
       const propertyId = data.split("_")[2];
@@ -377,6 +505,8 @@ function command(bot) {
       });
       measurement(ctx);
     } else if (data.startsWith("edit_dependent_value_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       const dependentValueName = data.split("_")[4];
       const dependentValueId = data.split("_")[3];
       const propertyId = data.split("_")[2];
@@ -408,6 +538,8 @@ function command(bot) {
 
       confirmEditDiscardWithoutUser(ctx, session);
     } else if (data.startsWith("forNewUser_edit_dependent_value_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       const dependentValueName = data.split("_")[5];
       const dependentValueId = data.split("_")[4];
       const propertyId = data.split("_")[3];
@@ -440,27 +572,43 @@ function command(bot) {
 
       confirmEditDiscardWithUser(ctx, session);
     } else if (data === "piece" || data === "quintal" || data === "m3") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.metrics = data;
       ctx.reply("Please enter a quantity:");
       session.step = "waitingForQuantity";
     } else if (data === "editWithoutUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.isNewUser = false;
       await processEditChoices(ctx);
     } else if (data === "editWithUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.isNewUser = true;
       await processEditChoices(ctx);
     } else if (data === "editUserToViewContact") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       await EditUser(ctx);
     } else if (data === "edit_username_to_viewContact") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("Enter your full name: ");
       session.step = "waitingForEditedNameToViewContact";
     } else if (data === "edit_phoneNumber_to_viewContact") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("Enter your Phone number: ");
       session.step = "waitingForEditedPhoneToViewContact";
     } else if (data === "edit_businessType_to_viewContact") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       BusinessTypeMenu(ctx);
       session.step = "waitingForEditedBusinessTypeToViewContact";
     } else if (data.startsWith("edit_property_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       console.log("-----------------------------------------------------");
       const propertyId = data.split("_")[2];
       const propertyName = data.split("_")[3];
@@ -481,6 +629,8 @@ function command(bot) {
         ctx.reply(`${propertyName} property not found.`);
       }
     } else if (data.startsWith("edit_propertyWithuser_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       const propertyId = data.split("_")[2];
       const propertyName = data.split("_")[3];
       session.propertyNameEdit = propertyName;
@@ -500,39 +650,61 @@ function command(bot) {
         ctx.reply(`${propertyName} property not found.`);
       }
     } else if (data === "edit_metrics") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       measurementForEdit(ctx);
       session.step = "waitingForMetricEditWithoutUser";
     } else if (data === "edit_metricsWithUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       measurementForEdit(ctx);
       session.step = "waitingForMetricEditWithUser";
     } else if (session && session.step === "waitingForMetricEditWithoutUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.metrics = data.split("_")[1];
 
       confirmEditDiscardWithoutUser(ctx, session);
       session.step = "waitingForConfirmationWithoutUser";
     } else if (session && session.step === "waitingForMetricEditWithUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.metrics = data.split("_")[1];
       confirmEditDiscardWithUser(ctx, session);
       session.step = "waitingForConfirmationWithoutUser";
     } else if (data === "edit_quantity") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("enter the quantity");
       session.step = "waitingForQuantity";
     } else if (data === "edit_quantityWithUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("enter the quantity");
       session.step = "waitingForQuantityEdit";
     } else if (data === "edit_username") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("enter your full name");
       session.step = "waitingForNameEdit";
     } else if (data === "edit_username_to_viewContact") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("enter your full name");
       session.step = "waitingForNameEditToViewContact";
     } else if (data === "edit_phoneNumber") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("enter your Phone number");
       session.step = "waitingForPhoneEdit";
     } else if (data === "edit_businessType") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       BusinessTypeMenu(ctx);
       session.step = "waitingForEditedBusiness";
     } else if (data === "discardWithoutUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("Discarded");
       resetSession(session);
     } else if (
@@ -543,6 +715,8 @@ function command(bot) {
       data === "Exporter" ||
       data === "Buying Agent"
     ) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.businessType = data;
       if (session.step === "waitingForEditedBusinessTypeToViewContact") {
         confirmEditDiscardOnlyUser(ctx, session);
@@ -561,6 +735,8 @@ function command(bot) {
         });
       }
     } else if (data.startsWith("viewDetails_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       const user = await checkUser(ctx.chat.id);
       if (!user) {
         ctx.reply("Enter your name");
@@ -570,6 +746,8 @@ function command(bot) {
       }
     }
     if (data === "accept") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       try {
         confirmEditDiscardWithUser(ctx, session);
       } catch (error) {
@@ -580,6 +758,8 @@ function command(bot) {
       }
     }
     if (data === "acceptToViewContact") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       try {
         confirmEditDiscardOnlyUser(ctx, session);
 
@@ -591,15 +771,25 @@ function command(bot) {
         );
       }
     } else if (data === "confirmWithoutUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       await confirmWithoutUser(ctx, session);
     } else if (data === "confirmWithUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       await confirmWithUser(ctx, session);
     } else if (data === "confirmUser") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       await confirmUser(ctx, session);
     } else if (data === "confirmUserToViewContact") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       await confirmUser(ctx, session);
       await viewFullContact(bot, ctx);
     } else if (session && session.step === "waitingForBusinessType") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       session.businessType = data;
       await ctx.reply("Accept terms and condition", {
         reply_markup: {
