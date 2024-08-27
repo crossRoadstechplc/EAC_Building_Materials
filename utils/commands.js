@@ -32,9 +32,13 @@ const {
 const {
   setpreferenceuser,
   getPreferenceProduct,
+  fetchPreferences,
+  deletePreference,
 } = require("../services/preferenceServies");
 
 let selectedProducts = [];
+let selectedPreference = [];
+
 const categoryId = 2;
 
 function command(bot) {
@@ -42,6 +46,7 @@ function command(bot) {
     { command: "start", description: "Start" },
 
     { command: "set_preference", description: "set-prefernece" },
+    { command: "remove_preference", description: "remove-preference" },
   ]);
   const phoneNumRegExp = /((^(\+251|0)(9|7)\d{2})-?\d{6})$/;
   const localSession = new LocalSession({ database: "session_db.json" });
@@ -164,6 +169,47 @@ function command(bot) {
     }
   });
 
+  bot.command("remove_preference", async (ctx) => {
+    try {
+      const user = await checkUser(ctx.chat.id);
+      if (!user) {
+        return ctx.reply("User not found. Please register first.");
+      }
+      session.userId = user.id;
+      const preferenceList = await fetchPreferences(user.id);
+      if (!preferenceList || preferenceList.length === 0) {
+        return ctx.reply("No preferences found to remove.");
+      }
+
+      const formattedPreference = preferenceList.map((preference) => {
+        const isSelected = selectedPreference.includes(preference.id);
+        return {
+          text: `${isSelected ? "✅ " : ""}${preference.product.name}`,
+          callback_data: `Preference_selected_${preference.id}`,
+        };
+      });
+
+      const formattedButtons = [];
+      for (let i = 0; i < formattedPreference.length; i += 2) {
+        formattedButtons.push(formattedPreference.slice(i, i + 2));
+      }
+
+      // Ensure the "Done" button is added correctly
+      formattedButtons.push([{ text: "Done", callback_data: "doneDel" }]);
+
+      const inlineKeyboard = {
+        reply_markup: {
+          inline_keyboard: formattedButtons,
+        },
+      };
+
+      await ctx.reply("Choose a preference:", inlineKeyboard);
+    } catch (error) {
+      console.error("Error in remove_preference command:", error);
+      ctx.reply("An error occurred. Please try again later.");
+    }
+  });
+
   bot.on("callback_query", async (ctx) => {
     const { data } = ctx.callbackQuery;
     const { session } = ctx;
@@ -266,6 +312,69 @@ function command(bot) {
 
         ctx.reply(`Saved Preferences: ${selectedProductNames.join(", ")}`);
       }
+    } else if (data.startsWith("Preference_selected_")) {
+      const preferenceId = parseInt(data.split("_")[2], 10);
+
+      const user = await checkUser(ctx.chat.id);
+      if (!user) {
+        return ctx.reply("User not found. Please register first.");
+      }
+
+      if (selectedPreference.includes(preferenceId)) {
+        // Unselect the preference
+        session.selectedPreference = selectedPreference.filter(
+          (id) => id !== preferenceId
+        );
+      } else {
+        // Select the preference
+        selectedPreference.push(preferenceId);
+      }
+
+      // Update the inline keyboard
+      const preferenceList = await fetchPreferences(user.id);
+      const updatedPreferences = preferenceList.map((preference) => {
+        const isSelected = selectedPreference.includes(preference.id);
+        return {
+          text: `${isSelected ? "✅ " : ""}${preference.product.name}`,
+          callback_data: `Preference_selected_${preference.id}`,
+        };
+      });
+
+      const updatedButtons = [];
+      for (let i = 0; i < updatedPreferences.length; i += 2) {
+        updatedButtons.push(updatedPreferences.slice(i, i + 2));
+      }
+
+      updatedButtons.push([{ text: "Done", callback_data: "doneDel" }]);
+
+      try {
+        await ctx.editMessageReplyMarkup({
+          inline_keyboard: updatedButtons,
+        });
+      } catch (error) {
+        console.error("Failed to edit message:", error);
+      }
+    } else if (data === "doneDel") {
+      const user = await checkUser(ctx.chat.id);
+      if (!user) {
+        return ctx.reply("User not found. Please register first.");
+      }
+      // Delete unselected preferences
+      const preferenceList = await fetchPreferences(user.id);
+      console.log("###############################", user.id);
+      const selectedPreferences = preferenceList.filter((preference) =>
+        selectedPreference.includes(preference.id)
+      );
+
+      for (const preference of selectedPreferences) {
+        await deletePreference(preference.id);
+      }
+
+      ctx.reply(
+        `Deleted Preferences: ${selectedPreferences
+          .map((pref) => pref.product.name)
+          .join(", ")}`
+      );
     } else if (
       data.startsWith("edit_value_") &&
       session.step === "waitingForPropertyValueEdit"
@@ -813,6 +922,8 @@ function command(bot) {
       session.step !== "waitingForQuantityEdit" &&
       session.step != "waitingForName" &&
       session.step !== "waitingForNameToViewContact" &&
+      session.step !== "waitingForNameToSelectPreference" &&
+      session.step !== "waitingForPhoneToSelectPreference" &&
       session.step != "waitingForNameEdit" &&
       session.step != "waitingForEditedNameToViewContact" &&
       session.step != "waitingForNameEditToViewContact" &&
@@ -912,11 +1023,27 @@ function command(bot) {
             ctx.reply("enter your Phone number");
             session.step = "waitingForPhoneToViewContact";
             break;
+          case "waitingForNameToSelectPreference":
+            session.name = text;
+            ctx.reply("Enter Phone number");
+            session.step = "waitingForPhoneToSelectPreference";
+            break;
           case "waitingForPhoneToViewContact":
             session.phone = text;
             if (phoneNumRegExp.test(session.phone)) {
               BusinessTypeMenu(ctx);
               session.step = "waitingForBusinessTypeToViewContact";
+            } else {
+              ctx.reply(
+                "Phone number id Invalid. Please enter valid phone number"
+              );
+            }
+            break;
+          case "waitingForPhoneToSelectPreference":
+            session.phone = text;
+            if (phoneNumRegExp.test(session.phone)) {
+              BusinessTypeMenu(ctx);
+              session.step = "waitingForBusinessTypeToSelectPreference";
             } else {
               ctx.reply(
                 "Phone number id Invalid. Please enter valid phone number"

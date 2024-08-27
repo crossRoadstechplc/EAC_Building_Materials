@@ -23,15 +23,41 @@ async function getPreferenceProduct(categoryId) {
     const response = await axios.post(`${preferenceBaseUrl}/getproduct`, {
       categoryId,
     });
+    console.log("------------------------------------------------");
     console.log(response.data.products);
 
     return response.data.products;
   } catch (error) {
-    console.error("getting somethin ledse");
+    console.error("Error getting Preference : ", error);
+  }
+}
+
+async function fetchPreferences(userId) {
+  try {
+    const response = await axios.get(
+      `${preferenceBaseUrl}/fetchPreference?userId=${userId}`
+    );
+    console.log(response.data.preferences);
+    return response.data.preferences;
+  } catch (error) {
+    console.error("Error gettung preferences: ", error);
+  }
+}
+
+async function deletePreference(preferenceId) {
+  try {
+    const response = await axios.post(
+      `${preferenceBaseUrl}/deletePreference?id=${preferenceId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting preference: ", error);
   }
 }
 
 module.exports = {
   setpreferenceuser,
   getPreferenceProduct,
+  fetchPreferences,
+  deletePreference,
 };
