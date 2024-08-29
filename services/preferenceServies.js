@@ -55,9 +55,25 @@ async function deletePreference(preferenceId) {
   }
 }
 
+async function saveRating(rating_value, comment, userId, informationId) {
+  try {
+    const response = await axios.post(`${preferenceBaseUrl}/saveRating`, {
+      rating_value,
+      comment,
+      userId,
+      informationId,
+    });
+    console.log(rating_value, comment, userId, informationId);
+    return response.data;
+  } catch (error) {
+    console.error("Error Saving rating", error);
+  }
+}
+
 module.exports = {
   setpreferenceuser,
   getPreferenceProduct,
   fetchPreferences,
   deletePreference,
+  saveRating,
 };

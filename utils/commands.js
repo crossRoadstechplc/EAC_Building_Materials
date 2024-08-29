@@ -34,6 +34,7 @@ const {
   getPreferenceProduct,
   fetchPreferences,
   deletePreference,
+  saveRating,
 } = require("../services/preferenceServies");
 
 let selectedProducts = [];
@@ -853,6 +854,34 @@ function command(bot) {
       } else {
         await viewFullContact(bot, ctx);
       }
+    } else if (data.startsWith("rating_")) {
+      const infoId = data.split("_")[1];
+      const ratingValue = data.split("_")[2];
+
+      session.infoId = infoId;
+      session.ratingValue = ratingValue;
+
+      ctx.reply("Do you want to add additional comment: ", {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "Yes", callback_data: "WaitingForComment" }],
+            [{ text: "No", callback_data: "NoComment" }],
+          ],
+        },
+      });
+    } else if (data === "NoComment") {
+      console.log("session.ratingValue: ", session.ratingValue);
+      console.log("session.infoId: ", session.infoId);
+      try {
+        const user = await checkUser(ctx.chat.id);
+        await saveRating(session.ratingValue, null, user.id, session.infoId);
+        ctx.reply("Rating saved");
+      } catch (error) {
+        console.error("Error Saving Rating", error);
+      }
+    } else if (data === "WaitingForComment") {
+      ctx.reply("Enter the comment you want to add: ");
+      session.step = "WaitingForCommentText";
     }
     if (data === "accept") {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -920,6 +949,7 @@ function command(bot) {
     if (
       session.step !== "waitingForQuantity" &&
       session.step !== "waitingForQuantityEdit" &&
+      session.step !== "WaitingForCommentText" &&
       session.step != "waitingForName" &&
       session.step !== "waitingForNameToViewContact" &&
       session.step !== "waitingForNameToSelectPreference" &&
@@ -936,6 +966,23 @@ function command(bot) {
     } else {
       if (session) {
         switch (session.step) {
+          case "WaitingForCommentText":
+            session.comment = text;
+
+            try {
+              const user = await checkUser(ctx.chat.id);
+
+              await saveRating(
+                session.ratingValue,
+                session.comment,
+                user.id,
+                session.infoId
+              );
+              ctx.reply("Rating Saved");
+            } catch (error) {
+              console.error("Error Saving Rating", error);
+            }
+            break;
           case "waitingForQuantity":
             const quantity = text;
             session.quantity = quantity;
