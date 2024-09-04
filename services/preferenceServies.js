@@ -11,6 +11,7 @@ async function setpreferenceuser(userId, categoryId, productId) {
       categoryId,
       productId,
     });
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error creating preference:", error);

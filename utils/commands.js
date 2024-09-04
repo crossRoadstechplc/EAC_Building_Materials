@@ -826,23 +826,29 @@ function command(bot) {
       data === "Buying Agent"
     ) {
       await ctx.telegram.deleteMessage(chatId, messageId);
-
+      console.log(session.step);
       session.businessType = data;
-      if (session.step === "waitingForEditedBusinessTypeToViewContact") {
+      if (
+        session.step === "waitingForEditedBusinessTypeToViewContact" ||
+        session.step === "waitingForBusinessTypeToSelectPreference"
+      ) {
         confirmEditDiscardOnlyUser(ctx, session);
       } else if (session.step === "waitingForEditedBusiness") {
         confirmEditDiscardWithUser(ctx, session);
       } else if (session.step === "waitingForBusinessTypeToViewContact") {
-        ctx.reply("Accept terms and condition", {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                { text: "Accept", callback_data: "acceptToViewContact" },
-                { text: "Decline", callback_data: "decline" },
+        ctx.reply(
+          "https://telegra.ph/Terms-Conditions-and-Privacy-Statement-01-11",
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: "Accept", callback_data: "acceptToViewContact" },
+                  { text: "Decline", callback_data: "decline" },
+                ],
               ],
-            ],
-          },
-        });
+            },
+          }
+        );
       }
     } else if (data.startsWith("viewDetails_")) {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -920,6 +926,19 @@ function command(bot) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
       await confirmUser(ctx, session);
+    } else if (
+      data === "confirmUserToViewContact" &&
+      session.step === "set_pref"
+    ) {
+      console.log("object");
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
+      await confirmUser(ctx, session);
+      const user = await checkUser(ctx.chat.id);
+      for (const productId of selectedProducts) {
+        await setpreferenceuser(user.id, categoryId, productId);
+      }
+      ctx.reply("Preference is set");
     } else if (data === "confirmUserToViewContact") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
@@ -929,16 +948,19 @@ function command(bot) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
       session.businessType = data;
-      await ctx.reply("Accept terms and condition", {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: "Accept", callback_data: "accept" },
-              { text: "Decline", callback_data: "decline" },
+      await ctx.reply(
+        "https://telegra.ph/Terms-Conditions-and-Privacy-Statement-01-11",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "Accept", callback_data: "accept" },
+                { text: "Decline", callback_data: "decline" },
+              ],
             ],
-          ],
-        },
-      });
+          },
+        }
+      );
       session.step = "accept";
     }
   });
