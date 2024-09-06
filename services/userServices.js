@@ -1,6 +1,6 @@
 const axios = require("axios");
 // const spiceBaseUrl = "http://104.236.64.33:7050/api/UserService";
-const spiceBaseUrl = "http://localhost:7050/api/UserService";
+const spiceBaseUrl = "http://localhost:7051/api/UserService";
 
 async function registerUser(
   name,
@@ -30,12 +30,10 @@ async function checkUser(chat_id) {
       `${spiceBaseUrl}/fetchuser?chat_id=${chat_id}`
     );
 
-    console.log(response.data);
     if (response.data.exists) {
       return response.data.user;
     }
   } catch (error) {
-    console.log("Error geting user: ", error);
     throw error;
   }
 }

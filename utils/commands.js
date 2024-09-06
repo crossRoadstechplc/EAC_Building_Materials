@@ -63,9 +63,6 @@ function command(bot) {
           ctx.chat.id,
           ctx.session.lastMessageId
         );
-        console.log(
-          `Deleted previous message with ID: ${ctx.session.lastMessageId}`
-        );
       } catch (error) {
         if (error.response && error.response.error_code === 400) {
           console.error(
@@ -226,11 +223,9 @@ function command(bot) {
       session.productId = productId;
 
       try {
-        console.log(session.productName);
         const properties = await fetchPropertyByProduct(session.productId);
         session.propertiesQueue = properties;
         session.currentPropertyIndex = 0;
-        console.log("Properties queue", session.propertiesQueue);
         await processNextProperty(ctx);
       } catch (error) {
         console.error("Failed to fetch property: ", error);
@@ -239,7 +234,6 @@ function command(bot) {
     } else if (data.startsWith("Preference_product_")) {
       const productId = parseInt(data.split("_")[2], 10); // Convert productId to an integer
 
-      console.log("Product Id: ", productId);
       session.preferenceProductId = productId;
 
       const preferenceProduct = await getPreferenceProduct(categoryId);
@@ -275,8 +269,6 @@ function command(bot) {
           await ctx.editMessageReplyMarkup({
             inline_keyboard: updatedButtons,
           });
-        } else {
-          console.log("No changes to the markup"); // Debugging output
         }
       } catch (error) {
         console.error("Failed to edit message:", error);
@@ -293,17 +285,12 @@ function command(bot) {
         .map((product) => product.name);
 
       session.preferenceProductNames = selectedProductNames;
-      console.log(
-        "session.preferenceProductNames:  ",
-        session.preferenceProductNames
-      );
 
       if (!user) {
         ctx.reply("Register first and save preference");
         ctx.reply("Enter your name");
         session.step = "waitingForNameToSelectPreference";
       } else {
-        console.log("userID: ", user.id);
         session.UserID = user.id; // Ensure the session is updated with the user ID
 
         // Loop through selectedProducts and call setpreferenceuser for each one
@@ -362,7 +349,6 @@ function command(bot) {
       }
       // Delete unselected preferences
       const preferenceList = await fetchPreferences(user.id);
-      console.log("###############################", user.id);
       const selectedPreferences = preferenceList.filter((preference) =>
         selectedPreference.includes(preference.id)
       );
@@ -382,15 +368,11 @@ function command(bot) {
     ) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      console.log("object");
-      console.log(session.currentPropertyIndex);
       const propertyId = data.split("_")[2];
       const valueId = data.split("_")[3];
       const valueName = data.split("_")[4];
       const hasDependentValue = data.split("_")[5];
       const property = session.propertiesQueue[session.currentPropertyIndex];
-      console.log("Property ", property);
-      console.log(property.name);
 
       const existingPropertyIndex = session.selectedValues.findIndex(
         (item) => item.property === property.name
@@ -398,28 +380,17 @@ function command(bot) {
 
       if (existingPropertyIndex !== -1) {
         session.selectedValues[existingPropertyIndex].value = valueName;
-        console.log("Updated selectedValue:", {
-          property: property.name,
-          value: valueName,
-        });
       } else {
         session.selectedValues.push({
           property: property.name,
           value: valueName,
         });
-        console.log("Added selectedValue:", {
-          property: property.name,
-          value: valueName,
-        });
       }
       if (hasDependentValue) {
-        console.log("PRODUCT ID: ", session.productId);
-        console.log("VALUEID: ", valueId);
         const dependentValues = await fetchDependentValue(
           valueId,
           session.productId
         );
-        console.log("DEPENDENT VALUES : ", dependentValues);
 
         if (dependentValues.length > 0) {
           const productPropertyId = dependentValues[0].productPropertyId;
@@ -455,7 +426,6 @@ function command(bot) {
             },
           };
 
-          console.log("PropertyNAMe : ", newPropertyNameValue);
           session.dependentValueName = newPropertyNameValue;
 
           const dependentMessage = await ctx.reply(
@@ -477,13 +447,10 @@ function command(bot) {
     ) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      console.log(session.currentPropertyIndex);
       const valueId = data.split("_")[3];
       const valueName = data.split("_")[4];
       const hasDependentValue = data.split("_")[5];
       const property = session.propertiesQueue[session.currentPropertyIndex];
-      console.log("Property ", property);
-      console.log(property.name);
 
       const existingPropertyIndex = session.selectedValues.findIndex(
         (item) => item.property === property.name
@@ -491,28 +458,17 @@ function command(bot) {
 
       if (existingPropertyIndex !== -1) {
         session.selectedValues[existingPropertyIndex].value = valueName;
-        console.log("Updated selectedValue:", {
-          property: property.name,
-          value: valueName,
-        });
       } else {
         session.selectedValues.push({
           property: property.name,
           value: valueName,
         });
-        console.log("Added selectedValue:", {
-          property: property.name,
-          value: valueName,
-        });
       }
       if (hasDependentValue) {
-        console.log("PRODUCT ID: ", session.productId);
-        console.log("VALUEID: ", valueId);
         const dependentValues = await fetchDependentValue(
           valueId,
           session.productId
         );
-        console.log("DEPENDENT VALUES : ", dependentValues);
 
         if (dependentValues.length > 0) {
           const productPropertyId = dependentValues[0].productPropertyId;
@@ -548,7 +504,6 @@ function command(bot) {
             },
           };
 
-          console.log("PropertyNAMe : ", newPropertyNameValue);
           session.dependentValueName = newPropertyNameValue;
 
           const dependentMessage = await ctx.reply(
@@ -574,7 +529,6 @@ function command(bot) {
       const hasDependentValue = data.split("_")[5];
       const propertyName = data.split("_")[6];
 
-      console.log(valueName);
       ctx.session.valueId = valueId;
       ctx.session.valueName = valueName;
       ctx.session.propertyId = propertyId;
@@ -584,11 +538,6 @@ function command(bot) {
         property: propertyName,
         value: valueName,
         valueId: valueId,
-        hasDependentValue: hasDependentValue,
-      });
-      console.log("Added selectedValue:", {
-        property: propertyName,
-        value: valueName,
         hasDependentValue: hasDependentValue,
       });
 
@@ -609,10 +558,6 @@ function command(bot) {
         valueId: dependentValueId,
       });
 
-      console.log("Added dependentValue:", {
-        property: `Dependent of ${propertyId}`,
-        value: dependentValueName,
-      });
       measurement(ctx);
     } else if (data.startsWith("edit_dependent_value_")) {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -640,11 +585,6 @@ function command(bot) {
           valueId: dependentValueId,
         });
       }
-
-      console.log("Updated dependentValue:", {
-        property: `Dependent of ${propertyId}`,
-        value: dependentValueName,
-      });
 
       confirmEditDiscardWithoutUser(ctx, session);
     } else if (data.startsWith("forNewUser_edit_dependent_value_")) {
@@ -674,11 +614,6 @@ function command(bot) {
           valueId: dependentValueId,
         });
       }
-
-      console.log("Updated dependentValue:", {
-        property: `Dependent of ${propertyId}`,
-        value: dependentValueName,
-      });
 
       confirmEditDiscardWithUser(ctx, session);
     } else if (data === "piece" || data === "quintal" || data === "m3") {
@@ -719,12 +654,9 @@ function command(bot) {
     } else if (data.startsWith("edit_property_")) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      console.log("-----------------------------------------------------");
       const propertyId = data.split("_")[2];
       const propertyName = data.split("_")[3];
       session.propertyNameEdit = propertyName;
-      console.log("Property Name:", propertyName);
-      console.log("Property Id:", propertyId);
 
       const propertyIndex = session.propertiesQueue
         ? session.propertiesQueue.findIndex(
@@ -744,8 +676,6 @@ function command(bot) {
       const propertyId = data.split("_")[2];
       const propertyName = data.split("_")[3];
       session.propertyNameEdit = propertyName;
-      console.log("Property Name:", propertyName);
-      console.log("Property Id:", propertyId);
 
       const propertyIndex = session.propertiesQueue
         ? session.propertiesQueue.findIndex(
@@ -826,7 +756,6 @@ function command(bot) {
       data === "Buying Agent"
     ) {
       await ctx.telegram.deleteMessage(chatId, messageId);
-      console.log(session.step);
       session.businessType = data;
       if (
         session.step === "waitingForEditedBusinessTypeToViewContact" ||
@@ -876,8 +805,6 @@ function command(bot) {
         },
       });
     } else if (data === "NoComment") {
-      console.log("session.ratingValue: ", session.ratingValue);
-      console.log("session.infoId: ", session.infoId);
       try {
         const user = await checkUser(ctx.chat.id);
         await saveRating(session.ratingValue, null, user.id, session.infoId);
@@ -930,7 +857,6 @@ function command(bot) {
       data === "confirmUserToViewContact" &&
       session.step === "set_pref"
     ) {
-      console.log("object");
       await ctx.telegram.deleteMessage(chatId, messageId);
 
       await confirmUser(ctx, session);

@@ -19,10 +19,6 @@ async function measurement(ctx) {
 }
 
 async function measurementForEdit(ctx) {
-  console.log("Entering measurementForEdit function");
-  console.log("#$@$2342432%#@");
-  console.log("Exiting measurementForEdit function");
-
   const sentMessage = await ctx.reply(
     "Please choose the measurement / መለኪያ ይምረጡ:",
     Markup.inlineKeyboard([
@@ -105,8 +101,6 @@ async function confirmEditDiscardOnlyUser(ctx, session) {
 }
 
 async function confirmEditDiscardWithoutUser(ctx, session) {
-  console.log("WWWW", session.selectedValues);
-
   sentMessage = await ctx.reply(
     `Please confirm the following information provided:\nProduct Name: ${session.productName}\n` +
       session.selectedValues

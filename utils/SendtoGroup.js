@@ -8,8 +8,6 @@ async function sendItemToGroup(ctx, offerData, session) {
   try {
     let topicMessageId = 331;
 
-    console.log("Offer Data: /88", offerData);
-
     await ctx.telegram.sendMessage(
       -1002078753064,
       `Offer Type: ${session.offerType}\n` +

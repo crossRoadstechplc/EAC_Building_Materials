@@ -2,7 +2,7 @@ const axios = require("axios");
 
 //const spiceBaseUrl = "http://104.236.64.33:7050/api/UserService";
 
-const preferenceBaseUrl = "http://localhost:7050/api/Preference";
+const preferenceBaseUrl = "http://localhost:7051/api/Preference";
 
 async function setpreferenceuser(userId, categoryId, productId) {
   try {
@@ -11,7 +11,6 @@ async function setpreferenceuser(userId, categoryId, productId) {
       categoryId,
       productId,
     });
-    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error("Error creating preference:", error);
@@ -24,8 +23,6 @@ async function getPreferenceProduct(categoryId) {
     const response = await axios.post(`${preferenceBaseUrl}/getproduct`, {
       categoryId,
     });
-    console.log("------------------------------------------------");
-    console.log(response.data.products);
 
     return response.data.products;
   } catch (error) {
@@ -38,7 +35,6 @@ async function fetchPreferences(userId) {
     const response = await axios.get(
       `${preferenceBaseUrl}/fetchPreference?userId=${userId}`
     );
-    console.log(response.data.preferences);
     return response.data.preferences;
   } catch (error) {
     console.error("Error gettung preferences: ", error);
@@ -64,7 +60,6 @@ async function saveRating(rating_value, comment, userId, informationId) {
       userId,
       informationId,
     });
-    console.log(rating_value, comment, userId, informationId);
     return response.data;
   } catch (error) {
     console.error("Error Saving rating", error);

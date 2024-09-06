@@ -5,7 +5,6 @@ async function viewContact(bot, ctx) {
   const offerId = ctx.session.offerId;
   try {
     const offers = await fetchOffer(offerId);
-    console.log(offers);
 
     let message = `Product Name: ${offers.product_name}\nGrade: ${offers.grade}`;
 
@@ -42,7 +41,6 @@ async function viewFullContact(bot, ctx) {
 
   try {
     const user = await checkUser(ctx.chat.id);
-    console.log("user: ", user);
     const offers = await fetchOffer(offerId);
     if (offers.product_name) {
       let message = `Product Name: ${offers.product_name}\nGrade: ${offers.grade}`;
@@ -84,7 +82,6 @@ async function viewFullContact(bot, ctx) {
           interactionData.viewer_chat_id,
           interactionData.offerId
         );
-        console.log("Interaction saved successfully.");
       } catch (error) {
         console.error("Error saving interaction:", error);
       }

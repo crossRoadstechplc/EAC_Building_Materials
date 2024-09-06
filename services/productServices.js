@@ -1,6 +1,6 @@
 const axios = require("axios");
-// const buildingBaseUrl = "http://104.236.64.33:7050/api/BuildingMaterials";
-const buildingBaseUrl = "http://localhost:7050/api/BuildingMaterials";
+const buildingBaseUrl = "http://104.236.64.33:7050/api/BuildingMaterials";
+// const buildingBaseUrl = "http://localhost:7051/api/BuildingMaterials";
 
 async function saveOffer(
   product_name,
@@ -60,7 +60,6 @@ async function fetchOffer(offerId) {
 async function fetchProperty() {
   try {
     const response = await axios.get(`${buildingBaseUrl}/fetchProduct`);
-    console.log("Properties : ", response.data);
     return response.data;
   } catch (error) {
     console.error("error fetching property: ", error);
@@ -80,13 +79,9 @@ async function fetchPropertyByProduct(productId) {
 
 async function fetchValueByProperty(productId, ProductPropertyId) {
   try {
-    console.log(
-      `Fetching values for productId: ${productId}, ProductPropertyId: ${ProductPropertyId}`
-    );
     const response = await axios.get(
       `${buildingBaseUrl}/fetchPropertyValue?productId=${productId}&ProductPropertyId=${ProductPropertyId}`
     );
-    console.log("Api response: ", response.data);
     return response.data;
   } catch (error) {
     console.error("error fetching value: ", error);
@@ -114,7 +109,6 @@ async function saveInteraction(
   offerId
 ) {
   try {
-    console.log("Making API call to save interaction...");
     const response = await axios.post(`${buildingBaseUrl}/createInteraction`, {
       poster_name,
       poster_phone_number,
@@ -126,7 +120,6 @@ async function saveInteraction(
       viewer_chat_id,
       offerId,
     });
-    console.log("API call successful. Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Can't add to Interaction table :", error);
@@ -134,13 +127,10 @@ async function saveInteraction(
 }
 
 async function fetchDependentValue(productPropertyValueId, productId) {
-  console.log("productPropertyValueId: ", productPropertyValueId);
-  console.log("productId: ", productId);
   try {
     const response = await axios.get(
       `${buildingBaseUrl}/fetchDependentPropertyValues?productPropertyValueId=${productPropertyValueId}&productId=${productId}`
     );
-    console.log("Response data : ", response.data);
     return response.data;
   } catch (error) {
     console.error("Error getting dependent value: ", error);

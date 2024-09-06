@@ -15,10 +15,7 @@ async function processProperty(
   const property = session.propertiesQueue[propertyIndex];
 
   try {
-    console.log("PROPERTY DETAILS : ", property);
     const values = await fetchValueByProperty(session.productId, property.id);
-
-    console.log("Dependent value:  ", values.dependentValue);
 
     const formattedValues = values.map((value) => {
       const truncatedValue =
@@ -27,7 +24,6 @@ async function processProperty(
           : value.value;
 
       let callbackData = `select_value_${property.id}_${value.id}_${truncatedValue}_${value.hasDependentValue}_${property.name}`;
-      console.log(callbackData);
       if (Buffer.byteLength(callbackData, "utf-8") > 64) {
         callbackData = callbackData.slice(0, Math.floor(64 / 2));
       }
@@ -61,7 +57,6 @@ async function processProperty(
     if (isEdit && isEdit2) {
       session.step = "waitingForPropertyValueEdit2";
     } else if (isEdit) {
-      console.log("RRRRRRR");
       session.step = "waitingForPropertyValueEdit";
     } else {
       session.step = "waitingForPropertyValue";
@@ -82,12 +77,9 @@ async function processPropertyForEdit(
 ) {
   const { session } = ctx;
   const property = session.propertiesQueue[propertyIndex];
-  console.log("property: ", property);
 
   try {
-    console.log("PROPERTY DETAILS : ", property);
     const values = await fetchValueByProperty(session.productId, property.id);
-    console.log("values: ", values);
     const formattedValues = values.map((value) => {
       const truncatedValue =
         Buffer.byteLength(value.value, "utf-8") > 40
@@ -95,7 +87,6 @@ async function processPropertyForEdit(
           : value.value;
 
       let callbackData = `edit_value_${property.id}_${value.id}_${truncatedValue}_${value.hasDependentValue}_${property.name}`;
-      console.log(callbackData);
       if (Buffer.byteLength(callbackData, "utf-8") > 64) {
         callbackData = callbackData.slice(0, Math.floor(64 / 2));
       }
@@ -127,10 +118,8 @@ async function processPropertyForEdit(
     }
 
     if (isEdit && isEdit2) {
-      console.log("TTTTTTTTTT");
       session.step = "waitingForPropertyValueEdit2";
     } else if (isEdit) {
-      console.log("RRRRRRR");
       session.step = "waitingForPropertyValueEdit";
     } else {
       session.step = "waitingForPropertyValue";
@@ -149,7 +138,6 @@ async function processNextProperty(ctx) {
   if (session.isValue === true) {
     const lastSelectedValue =
       session.selectedValues[session.selectedValues.length - 1];
-    console.log("LAST SELECTED VALUE: ", lastSelectedValue);
 
     if (lastSelectedValue) {
       const hasDependentValue =
@@ -157,9 +145,6 @@ async function processNextProperty(ctx) {
         lastSelectedValue.hasDependentValue === true;
 
       if (hasDependentValue) {
-        console.log("VALUE ID : ", ctx.session.valueId);
-        console.log("PRODUCT ID : ", ctx.session.productId);
-
         if (session.currentPropertyIndex > session.propertiesQueue.length) {
           if (!session.quantity) {
             measurement(ctx);
@@ -175,7 +160,6 @@ async function processNextProperty(ctx) {
           ctx.session.valueId,
           session.productId
         );
-        console.log("DEPENDENT VALUES : ", dependentValues);
 
         if (dependentValues.length > 0) {
           const productPropertyId = dependentValues[0].productPropertyId;
@@ -211,7 +195,6 @@ async function processNextProperty(ctx) {
             },
           };
 
-          console.log("PropertyNAMe : ", propertyNameValue);
           session.dependentValueName = propertyNameValue;
 
           const dependentMessage = await ctx.reply(
@@ -225,8 +208,6 @@ async function processNextProperty(ctx) {
           return;
         }
       }
-
-      console.log("NO DEPENDENT VALUE");
     }
 
     if (session.currentPropertyIndex >= session.propertiesQueue.length) {
