@@ -17,6 +17,7 @@ const {
   confirmEditDiscardOnlyUser,
   confirmEditDiscardWithoutUser,
   confirmEditDiscardWithUser,
+  confirmEditDiscardOnlyUserForPerf,
 } = require("./constants");
 const { processEditChoices, EditUser } = require("./EditChoice");
 const {
@@ -651,6 +652,8 @@ function command(bot) {
 
       BusinessTypeMenu(ctx);
       session.step = "waitingForEditedBusinessTypeToViewContact";
+    } else if (session.step === "waitingForBusinessTypeToSelectPreference") {
+      confirmEditDiscardOnlyUserForPerf(ctx, session);
     } else if (data.startsWith("edit_property_")) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
@@ -757,10 +760,7 @@ function command(bot) {
     ) {
       await ctx.telegram.deleteMessage(chatId, messageId);
       session.businessType = data;
-      if (
-        session.step === "waitingForEditedBusinessTypeToViewContact" ||
-        session.step === "waitingForBusinessTypeToSelectPreference"
-      ) {
+      if (session.step === "waitingForEditedBusinessTypeToViewContact") {
         confirmEditDiscardOnlyUser(ctx, session);
       } else if (session.step === "waitingForEditedBusiness") {
         confirmEditDiscardWithUser(ctx, session);
@@ -853,10 +853,7 @@ function command(bot) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
       await confirmUser(ctx, session);
-    } else if (
-      data === "confirmUserToViewContact" &&
-      session.step === "set_pref"
-    ) {
+    } else if (data === "confirmUserToSetPref") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
       await confirmUser(ctx, session);
@@ -871,7 +868,7 @@ function command(bot) {
       await confirmUser(ctx, session);
       await viewFullContact(bot, ctx);
     } else if (session && session.step === "waitingForBusinessType") {
-      await ctx.telegram.deleteMessage(chatId, messageId);
+      // await ctx.telegram.deleteMessage(chatId, messageId);
 
       session.businessType = data;
       await ctx.reply(

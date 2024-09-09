@@ -1,8 +1,8 @@
 const axios = require("axios");
 
-//const spiceBaseUrl = "http://104.236.64.33:7050/api/UserService";
+const preferenceBaseUrl = "http://104.236.64.33:7050/api/Preference";
 
-const preferenceBaseUrl = "http://localhost:7051/api/Preference";
+// const preferenceBaseUrl = "http://localhost:7051/api/Preference";
 
 async function setpreferenceuser(userId, categoryId, productId) {
   try {

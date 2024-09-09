@@ -100,6 +100,37 @@ async function confirmEditDiscardOnlyUser(ctx, session) {
   session.step = "set_pref";
 }
 
+async function confirmEditDiscardOnlyUserForPerf(ctx, session) {
+  sentMessage = await ctx.reply(
+    `To complete posting offer verify your choices:\n` +
+      `Full Name: ${session.name}\n` +
+      `Business Type: ${session.businessType}\n` +
+      `Phone number: ${session.phone}\n`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Confirm",
+              callback_data: "confirmUserToSetPref",
+            },
+            {
+              text: "Edit",
+              callback_data: "editUserToViewContact",
+            },
+            { text: "Discard", callback_data: "discardWithoutUser" },
+          ],
+        ],
+      },
+    }
+  );
+
+  if (sentMessage) {
+    ctx.session.lastMessageId = sentMessage.message_id;
+  }
+  session.step = "set_pref";
+}
+
 async function confirmEditDiscardWithoutUser(ctx, session) {
   sentMessage = await ctx.reply(
     `Please confirm the following information provided:\nProduct Name: ${session.productName}\n` +
@@ -159,6 +190,7 @@ module.exports = {
   measurementForEdit,
   resetSession,
   confirmEditDiscardOnlyUser,
+  confirmEditDiscardOnlyUserForPerf,
   confirmEditDiscardWithoutUser,
   confirmEditDiscardWithUser,
 };

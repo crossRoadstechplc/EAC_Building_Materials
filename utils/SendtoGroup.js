@@ -1,5 +1,5 @@
 async function sendItemToGroup(ctx, offerData, session) {
-  const botUsername = "https://t.me/EAC_Building_Material_bot";
+  const botUsername = "https://t.me/EACBuildingMaterialsBot";
   offerData;
 
   const botLink = `${botUsername}?start=${offerData.id}`;
