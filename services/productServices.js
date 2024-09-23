@@ -1,6 +1,6 @@
 const axios = require("axios");
 const buildingBaseUrl = "http://104.236.64.33:7050/api/BuildingMaterials";
-// const buildingBaseUrl = "http://localhost:7051/api/BuildingMaterials";
+// const buildingBaseUrl = "http://localhost:7050/api/BuildingMaterials";
 
 async function saveOffer(
   product_name,

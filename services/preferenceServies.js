@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const preferenceBaseUrl = "http://104.236.64.33:7050/api/Preference";
 
-// const preferenceBaseUrl = "http://localhost:7051/api/Preference";
+// const preferenceBaseUrl = "http://localhost:7050/api/Preference";
 
 async function setpreferenceuser(userId, categoryId, productId) {
   try {
@@ -30,10 +30,10 @@ async function getPreferenceProduct(categoryId) {
   }
 }
 
-async function fetchPreferences(userId) {
+async function fetchPreferences(userId, categoryId) {
   try {
     const response = await axios.get(
-      `${preferenceBaseUrl}/fetchPreference?userId=${userId}`
+      `${preferenceBaseUrl}/fetchPreference?userId=${userId}&categoryId=${categoryId}`
     );
     return response.data.preferences;
   } catch (error) {
