@@ -45,12 +45,6 @@ const categoryId = 18;
 // const categoryId = 2;
 
 function command(bot) {
-  bot.telegram.setMyCommands([
-    { command: "start", description: "Start" },
-
-    { command: "set_preference", description: "set-prefernece" },
-    { command: "remove_preference", description: "remove-preference" },
-  ]);
   const phoneNumRegExp = /((^(\+251|0)(9|7)\d{2})-?\d{6})$/;
   const localSession = new LocalSession({ database: "session_db.json" });
   bot.use(localSession.middleware());
