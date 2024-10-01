@@ -164,7 +164,7 @@ function command(bot) {
         },
       };
 
-      await ctx.reply("Choose a product:", inlineKeyboard);
+      await ctx.reply("Please choose a product you that want to receive information:", inlineKeyboard);
     }
   });
 
