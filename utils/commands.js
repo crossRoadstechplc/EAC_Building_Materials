@@ -41,15 +41,10 @@ const {
 let selectedProducts = [];
 let selectedPreference = [];
 
-const categoryId = 2;
+const categoryId = 18;
+// const categoryId = 2;
 
 function command(bot) {
-  bot.telegram.setMyCommands([
-    { command: "start", description: "Start" },
-
-    { command: "set_preference", description: "set-prefernece" },
-    { command: "remove_preference", description: "remove-preference" },
-  ]);
   const phoneNumRegExp = /((^(\+251|0)(9|7)\d{2})-?\d{6})$/;
   const localSession = new LocalSession({ database: "session_db.json" });
   bot.use(localSession.middleware());
@@ -175,7 +170,7 @@ function command(bot) {
         return ctx.reply("User not found. Please register first.");
       }
       session.userId = user.id;
-      const preferenceList = await fetchPreferences(user.id);
+      const preferenceList = await fetchPreferences(user.id, categoryId);
       if (!preferenceList || preferenceList.length === 0) {
         return ctx.reply("No preferences found to remove.");
       }
@@ -295,11 +290,40 @@ function command(bot) {
         session.UserID = user.id; // Ensure the session is updated with the user ID
 
         // Loop through selectedProducts and call setpreferenceuser for each one
+        let allPreferencesSaved = true; // Flag to track if all preferences are saved
+        let preferenceAlreadyExists = false; // Flag to track if any preference already exists
+
         for (const productId of selectedProducts) {
-          await setpreferenceuser(user.id, categoryId, productId);
+          try {
+            await setpreferenceuser(user.id, categoryId, productId);
+          } catch (error) {
+            allPreferencesSaved = false; // Set the flag to false if an error occurs
+
+            // Check if the error message contains 'Preference already exists'
+            if (
+              error.response &&
+              error.response.data.message === "Preference already exists"
+            ) {
+              preferenceAlreadyExists = true; // Set flag to true if any preference exists
+            } else {
+              ctx.reply(
+                `Error saving preference for product with ID ${productId}.`
+              );
+            }
+
+            console.error("Error setting Preference: ", error);
+          }
         }
 
-        ctx.reply(`Saved Preferences: ${selectedProductNames.join(", ")}`);
+        // After the loop, only send the success message if all preferences were saved successfully
+        if (allPreferencesSaved) {
+          ctx.reply(`Saved Preferences: ${selectedProductNames.join(", ")}`);
+        }
+
+        // If any preference already existed, print the message once
+        if (preferenceAlreadyExists) {
+          ctx.reply(`One or more preferences already exist.`);
+        }
       }
     } else if (data.startsWith("Preference_selected_")) {
       const preferenceId = parseInt(data.split("_")[2], 10);
@@ -320,7 +344,7 @@ function command(bot) {
       }
 
       // Update the inline keyboard
-      const preferenceList = await fetchPreferences(user.id);
+      const preferenceList = await fetchPreferences(user.id, categoryId);
       const updatedPreferences = preferenceList.map((preference) => {
         const isSelected = selectedPreference.includes(preference.id);
         return {
@@ -344,12 +368,14 @@ function command(bot) {
         console.error("Failed to edit message:", error);
       }
     } else if (data === "doneDel") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       const user = await checkUser(ctx.chat.id);
       if (!user) {
         return ctx.reply("User not found. Please register first.");
       }
       // Delete unselected preferences
-      const preferenceList = await fetchPreferences(user.id);
+      const preferenceList = await fetchPreferences(user.id, categoryId);
       const selectedPreferences = preferenceList.filter((preference) =>
         selectedPreference.includes(preference.id)
       );
@@ -790,6 +816,8 @@ function command(bot) {
         await viewFullContact(bot, ctx);
       }
     } else if (data.startsWith("rating_")) {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       const infoId = data.split("_")[1];
       const ratingValue = data.split("_")[2];
 
@@ -805,6 +833,7 @@ function command(bot) {
         },
       });
     } else if (data === "NoComment") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
       try {
         const user = await checkUser(ctx.chat.id);
         await saveRating(session.ratingValue, null, user.id, session.infoId);
@@ -813,6 +842,8 @@ function command(bot) {
         console.error("Error Saving Rating", error);
       }
     } else if (data === "WaitingForComment") {
+      await ctx.telegram.deleteMessage(chatId, messageId);
+
       ctx.reply("Enter the comment you want to add: ");
       session.step = "WaitingForCommentText";
     }
@@ -858,10 +889,42 @@ function command(bot) {
 
       await confirmUser(ctx, session);
       const user = await checkUser(ctx.chat.id);
+      let allPreferencesSaved = true; // Flag to track if all preferences are saved
+      let preferenceAlreadyExists = false; // Flag to track if any preference already exists
+
       for (const productId of selectedProducts) {
-        await setpreferenceuser(user.id, categoryId, productId);
+        try {
+          await setpreferenceuser(user.id, categoryId, productId);
+        } catch (error) {
+          allPreferencesSaved = false; // Set the flag to false if an error occurs
+
+          // Check if the error message contains 'Preference already exists'
+          if (
+            error.response &&
+            error.response.data.message === "Preference already exists"
+          ) {
+            preferenceAlreadyExists = true; // Set flag to true if any preference exists
+          } else {
+            ctx.reply(
+              `Error saving preference for product with ID ${productId}.`
+            );
+          }
+
+          console.error("Error setting Preference: ", error);
+        }
       }
-      ctx.reply("Preference is set");
+
+      // After the loop, only send the success message if all preferences were saved successfully
+      if (allPreferencesSaved) {
+        ctx.reply(
+          `Saved Preferences: ${session.preferenceProductNames.join(", ")}`
+        );
+      }
+
+      // If any preference already existed, print the message once
+      if (preferenceAlreadyExists) {
+        ctx.reply(`One or more preferences already exist.`);
+      }
     } else if (data === "confirmUserToViewContact") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
