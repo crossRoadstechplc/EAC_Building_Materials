@@ -159,7 +159,10 @@ function command(bot) {
         },
       };
 
-      await ctx.reply("Please select a product for which you would like to receive information:", inlineKeyboard);
+      await ctx.reply(
+        "Please select a product for which you would like to receive information:",
+        inlineKeyboard
+      );
     }
   });
 
@@ -829,14 +832,18 @@ function command(bot) {
         await viewFullContact(bot, ctx);
       }
     } else if (data.startsWith("rating_")) {
-      await ctx.telegram.deleteMessage(chatId, messageId);
-
       const infoId = data.split("_")[1];
       const ratingValue = data.split("_")[2];
 
       session.infoId = infoId;
       session.ratingValue = ratingValue;
 
+      // Remove the inline keyboard buttons by setting reply_markup to null
+      await ctx.telegram.editMessageReplyMarkup(chatId, messageId, null, {
+        reply_markup: null,
+      });
+
+      // Ask the user if they want to add an additional comment
       ctx.reply("Do you want to add additional comment: ", {
         reply_markup: {
           inline_keyboard: [
