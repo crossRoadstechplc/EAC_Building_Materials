@@ -1013,6 +1013,12 @@ function command(bot) {
             break;
           case "waitingForQuantity":
             const quantity = text;
+
+            if (isNaN(quantity)) {
+              ctx.reply("Please enter only numbers.");
+              return; // Exit early if it's not a number
+            }
+
             session.quantity = quantity;
 
             try {
@@ -1059,7 +1065,15 @@ function command(bot) {
             break;
 
           case "waitingForQuantityEdit":
-            session.quantity = text;
+            const quantity1 = text;
+
+            // Check if the input is a valid number
+            if (isNaN(quantity1)) {
+              ctx.reply("Please enter only numbers.");
+              return; // Exit early if it's not a number
+            }
+
+            session.quantity = quantity1;
 
             confirmEditDiscardWithUser(ctx, session);
             session.step = "waitingForConfirmationWithoutUser";
