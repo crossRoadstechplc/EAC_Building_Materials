@@ -159,7 +159,7 @@ function command(bot) {
         },
       };
 
-      await ctx.reply("Please choose a product you that want to receive information:", inlineKeyboard);
+      await ctx.reply("Please select a product for which you would like to receive information:", inlineKeyboard);
     }
   });
 
@@ -215,6 +215,7 @@ function command(bot) {
       session.isValue = false;
       const productId = data.split("_")[1];
       const productName = data.split("_")[2];
+
       session.productName = productName;
       session.productId = productId;
 
@@ -413,7 +414,7 @@ function command(bot) {
           value: valueName,
         });
       }
-      if (hasDependentValue) {
+      if (hasDependentValue === "true" || hasDependentValue === true) {
         const dependentValues = await fetchDependentValue(
           valueId,
           session.productId
@@ -466,7 +467,19 @@ function command(bot) {
           return;
         }
       } else {
-        confirmEditDiscardWithoutUser(ctx, session);
+        // Handle case when there's no dependent value
+        if (session.currentPropertyIndex >= session.propertiesQueue.length) {
+          // If all properties have been processed, call measurement
+          if (!session.quantity) {
+            measurement(ctx);
+            session.step = "waitingForMetric";
+          } else {
+            measurement(ctx);
+            session.step = "waitingForMetric";
+          }
+        } else {
+          confirmEditDiscardWithoutUser(ctx, session);
+        }
       }
     } else if (
       data.startsWith("edit_value_") &&

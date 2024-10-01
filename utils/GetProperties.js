@@ -16,7 +16,6 @@ async function processProperty(
 
   try {
     const values = await fetchValueByProperty(session.productId, property.id);
-
     const formattedValues = values.map((value) => {
       const truncatedValue =
         Buffer.byteLength(value.value, "utf-8") > 40
@@ -46,7 +45,7 @@ async function processProperty(
     };
 
     const sentMessage = await ctx.reply(
-      `Choose a value for ${property.name}:`,
+      `Please select ${property.name}:`,
       inlineKeyboard
     );
     session.propertyName = property.name;
@@ -146,6 +145,7 @@ async function processNextProperty(ctx) {
 
       if (hasDependentValue) {
         if (session.currentPropertyIndex > session.propertiesQueue.length) {
+          // After propertiesQueue has been processed, call measurement
           if (!session.quantity) {
             measurement(ctx);
             session.step = "waitingForMetric";
@@ -156,6 +156,7 @@ async function processNextProperty(ctx) {
           return;
         }
 
+        // Fetch dependent values if the current property has them
         const dependentValues = await fetchDependentValue(
           ctx.session.valueId,
           session.productId
@@ -207,10 +208,38 @@ async function processNextProperty(ctx) {
           }
           return;
         }
+      } else {
+        // If no dependent value, move to the next property
+        if (session.currentPropertyIndex >= session.propertiesQueue.length) {
+          // If we have reached the end of properties, trigger measurement
+          if (!session.quantity) {
+            measurement(ctx);
+            session.step = "waitingForMetric";
+          } else {
+            measurement(ctx);
+            session.step = "waitingForMetric";
+          }
+          return;
+        }
+
+        // Proceed to the next property
+        const property = session.propertiesQueue[session.currentPropertyIndex];
+        session.currentPropertyIndex++;
+
+        const sentMessage = await processProperty(
+          ctx,
+          session.currentPropertyIndex - 1
+        );
+
+        if (sentMessage) {
+          ctx.session.lastMessageId = sentMessage.message_id;
+        }
+        return; // Ensure it does not fall through to the measurement step
       }
     }
 
     if (session.currentPropertyIndex >= session.propertiesQueue.length) {
+      // Trigger the measurement only after all properties have been selected
       if (!session.quantity) {
         measurement(ctx);
         session.step = "waitingForMetric";
@@ -221,7 +250,9 @@ async function processNextProperty(ctx) {
       return;
     }
   } else {
+    // This handles the initial case where no values are selected yet
     if (session.currentPropertyIndex >= session.propertiesQueue.length) {
+      // If we've processed all properties, move to the measurement step
       if (!session.quantity) {
         measurement(ctx);
         session.step = "waitingForMetric";
@@ -232,10 +263,14 @@ async function processNextProperty(ctx) {
       return;
     }
 
+    // Process the next property in the queue
     const property = session.propertiesQueue[session.currentPropertyIndex];
     session.currentPropertyIndex++;
 
-    sentMessage = await processProperty(ctx, session.currentPropertyIndex - 1);
+    const sentMessage = await processProperty(
+      ctx,
+      session.currentPropertyIndex - 1
+    );
 
     if (sentMessage) {
       ctx.session.lastMessageId = sentMessage.message_id;

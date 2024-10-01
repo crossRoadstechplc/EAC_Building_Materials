@@ -22,7 +22,7 @@ async function GetProduct(bot, ctx) {
                 formattedButtons.push(formattedProducts.slice(i, i + 2));
             }
 
-            const sentMessage = await ctx.reply("Choose a product:", {
+            const sentMessage = await ctx.reply("Please select Product:", {
                 reply_markup: {
                     inline_keyboard: formattedButtons,
                 },
