@@ -6,7 +6,11 @@ async function viewContact(bot, ctx) {
   try {
     const offers = await fetchOffer(offerId);
 
-    let message = `Product Name: ${offers.product_name}\nGrade: ${offers.grade}`;
+    let message = `Product Name: ${offers.product_name}`;
+
+    if (offers.grade) {
+      message += `\nGrade: ${offers.grade}`;
+    }
 
     if (offers.class) {
       message += `\nClass: ${offers.class}`;

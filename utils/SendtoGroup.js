@@ -6,12 +6,12 @@ async function sendItemToGroup(ctx, offerData, session) {
   offerData.id;
 
   try {
-   // let topicMessageId = 9612;//new
-    let topicMessageId = 331;//old one
+    let topicMessageId = 9612; //new
+    // let topicMessageId = 331;//old one
 
     await ctx.telegram.sendMessage(
-      -1002078753064, //old one
-    //  -1001737871127,//new one 
+      // -1002078753064, //old one
+      -1001737871127, //new one
       `Offer Type: ${session.offerType}\n` +
         `Product Name: ${session.productName}\n` +
         session.selectedValues
