@@ -43,8 +43,11 @@ async function viewFullContact(bot, ctx) {
     const user = await checkUser(ctx.chat.id);
     const offers = await fetchOffer(offerId);
     if (offers.product_name) {
-      let message = `Product Name: ${offers.product_name}\nGrade: ${offers.grade}`;
+      let message = `Product Name: ${offers.product_name}`;
 
+      if (offers.grade) {
+        message += `\nGrade: ${offers.grade}`;
+      }
       if (offers.class) {
         message += `\nClass: ${offers.class}`;
       }
