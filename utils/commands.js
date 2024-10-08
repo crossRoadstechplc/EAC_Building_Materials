@@ -74,9 +74,9 @@ function command(bot) {
     let sentMessage;
     if (startPayload) {
       await viewContact(bot, ctx);
-    } else if (ctx.chat.id != "-1002078753064") {
+    } else if (ctx.chat.id != -1001737871127) {
       sentMessage = await ctx.reply(
-        "Welcome to the commodities platform! To post a buy/sell offer, please select the button below:",
+        "Welcome to the commodities platform! To post a buy/sell offer, please select the button below / እንኳን ወደሸቀጦች መገበያያ መድረክ በደህና መጡ! ለመግዛት/ለመሸጥ፣ እባክዎ ከታች ያለውን ቁልፍ ይምረጡ:",
         {
           reply_markup: {
             inline_keyboard: [
@@ -134,76 +134,159 @@ function command(bot) {
   });
 
   bot.command("set_preference", async (ctx) => {
-    const preferenceProduct = await getPreferenceProduct(categoryId);
+    if (ctx.chat.id !== -1001737871127) {
+      const preferenceProduct = await getPreferenceProduct(categoryId);
 
-    if (preferenceProduct && preferenceProduct.length > 0) {
-      const formattedProducts = preferenceProduct.map((product) => {
-        const isSelected = selectedProducts.includes(product.id);
-        return {
-          text: `${isSelected ? "✅ " : ""}${product.name}`,
-          callback_data: `Preference_product_${product.id}`,
+      if (preferenceProduct && preferenceProduct.length > 0) {
+        const formattedProducts = preferenceProduct.map((product) => {
+          const isSelected = selectedProducts.includes(product.id);
+          return {
+            text: `${isSelected ? "✅ " : ""}${product.name}`,
+            callback_data: `Preference_product_${product.id}`,
+          };
+        });
+
+        const formattedButtons = [];
+        for (let i = 0; i < formattedProducts.length; i += 2) {
+          formattedButtons.push(formattedProducts.slice(i, i + 2));
+        }
+
+        // Ensure the "Done" button is added correctly
+        formattedButtons.push([{ text: "Done", callback_data: "done" }]);
+
+        const inlineKeyboard = {
+          reply_markup: {
+            inline_keyboard: formattedButtons,
+          },
         };
-      });
 
-      const formattedButtons = [];
-      for (let i = 0; i < formattedProducts.length; i += 2) {
-        formattedButtons.push(formattedProducts.slice(i, i + 2));
+        await ctx.reply(
+          "Please select a product for which you would like to receive information:",
+          inlineKeyboard
+        );
       }
-
-      // Ensure the "Done" button is added correctly
-      formattedButtons.push([{ text: "Done", callback_data: "done" }]);
-
-      const inlineKeyboard = {
-        reply_markup: {
-          inline_keyboard: formattedButtons,
-        },
-      };
-
-      await ctx.reply(
-        "Please select a product for which you would like to receive information:",
-        inlineKeyboard
-      );
     }
   });
 
   bot.command("remove_preference", async (ctx) => {
-    try {
-      const user = await checkUser(ctx.chat.id);
-      if (!user) {
-        return ctx.reply("User not found. Please register first.");
-      }
-      session.userId = user.id;
-      const preferenceList = await fetchPreferences(user.id, categoryId);
-      if (!preferenceList || preferenceList.length === 0) {
-        return ctx.reply("No preferences found to remove.");
-      }
+    if (ctx.chat.id !== -1001737871127) {
+      try {
+        const user = await checkUser(ctx.chat.id);
+        if (!user) {
+          return ctx.reply(
+            "User not found. Please register first/እባክዎ ለመቀጠል መጀመሪያ ይመዝገቡ."
+          );
+        }
+        session.userId = user.id;
+        const preferenceList = await fetchPreferences(user.id, categoryId);
+        if (!preferenceList || preferenceList.length === 0) {
+          return ctx.reply(
+            "No preferences found to remove/ለማስወገድ ምንም ምርጫዎች አልተገኙም."
+          );
+        }
 
-      const formattedPreference = preferenceList.map((preference) => {
-        const isSelected = selectedPreference.includes(preference.id);
-        return {
-          text: `${isSelected ? "✅ " : ""}${preference.product.name}`,
-          callback_data: `Preference_selected_${preference.id}`,
+        const formattedPreference = preferenceList.map((preference) => {
+          const isSelected = selectedPreference.includes(preference.id);
+          return {
+            text: `${isSelected ? "✅ " : ""}${preference.product.name}`,
+            callback_data: `Preference_selected_${preference.id}`,
+          };
+        });
+
+        const formattedButtons = [];
+        for (let i = 0; i < formattedPreference.length; i += 2) {
+          formattedButtons.push(formattedPreference.slice(i, i + 2));
+        }
+
+        // Ensure the "Done" button is added correctly
+        formattedButtons.push([{ text: "Done", callback_data: "doneDel" }]);
+
+        const inlineKeyboard = {
+          reply_markup: {
+            inline_keyboard: formattedButtons,
+          },
         };
-      });
+        bot.command("set_preference", async (ctx) => {
+          const preferenceProduct = await getPreferenceProduct(categoryId);
 
-      const formattedButtons = [];
-      for (let i = 0; i < formattedPreference.length; i += 2) {
-        formattedButtons.push(formattedPreference.slice(i, i + 2));
+          if (preferenceProduct && preferenceProduct.length > 0) {
+            const formattedProducts = preferenceProduct.map((product) => {
+              const isSelected = selectedProducts.includes(product.id);
+              return {
+                text: `${isSelected ? "✅ " : ""}${product.name}`,
+                callback_data: `Preference_product_${product.id}`,
+              };
+            });
+
+            const formattedButtons = [];
+            for (let i = 0; i < formattedProducts.length; i += 2) {
+              formattedButtons.push(formattedProducts.slice(i, i + 2));
+            }
+
+            // Ensure the "Done" button is added correctly
+            formattedButtons.push([{ text: "Done", callback_data: "done" }]);
+
+            const inlineKeyboard = {
+              reply_markup: {
+                inline_keyboard: formattedButtons,
+              },
+            };
+
+            await ctx.reply(
+              "Please select a product for which you would like to receive information:",
+              inlineKeyboard
+            );
+          }
+        });
+
+        bot.command("remove_preference", async (ctx) => {
+          try {
+            const user = await checkUser(ctx.chat.id);
+            if (!user) {
+              return ctx.reply("User not found. Please register first.");
+            }
+            session.userId = user.id;
+            const preferenceList = await fetchPreferences(user.id, categoryId);
+            if (!preferenceList || preferenceList.length === 0) {
+              return ctx.reply("No preferences found to remove.");
+            }
+
+            const formattedPreference = preferenceList.map((preference) => {
+              const isSelected = selectedPreference.includes(preference.id);
+              return {
+                text: `${isSelected ? "✅ " : ""}${preference.product.name}`,
+                callback_data: `Preference_selected_${preference.id}`,
+              };
+            });
+
+            const formattedButtons = [];
+            for (let i = 0; i < formattedPreference.length; i += 2) {
+              formattedButtons.push(formattedPreference.slice(i, i + 2));
+            }
+
+            // Ensure the "Done" button is added correctly
+            formattedButtons.push([{ text: "Done", callback_data: "doneDel" }]);
+
+            const inlineKeyboard = {
+              reply_markup: {
+                inline_keyboard: formattedButtons,
+              },
+            };
+
+            await ctx.reply("Choose a preference:", inlineKeyboard);
+          } catch (error) {
+            console.error("Error in remove_preference command:", error);
+            ctx.reply("An error occurred. Please try again later.");
+          }
+        });
+
+        await ctx.reply("Choose a preference/ምርጫዎን ይምረጡ:", inlineKeyboard);
+      } catch (error) {
+        console.error("Error in remove_preference command:", error);
+        ctx.reply(
+          "An error occurred. Please try again later/ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክህ ትንሽ ቆይተው ይሞክሩ."
+        );
       }
-
-      // Ensure the "Done" button is added correctly
-      formattedButtons.push([{ text: "Done", callback_data: "doneDel" }]);
-
-      const inlineKeyboard = {
-        reply_markup: {
-          inline_keyboard: formattedButtons,
-        },
-      };
-
-      await ctx.reply("Choose a preference:", inlineKeyboard);
-    } catch (error) {
-      console.error("Error in remove_preference command:", error);
-      ctx.reply("An error occurred. Please try again later.");
     }
   });
 
