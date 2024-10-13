@@ -12,7 +12,7 @@ async function sendItemToGroup(ctx, offerData, session) {
     await ctx.telegram.sendMessage(
       // -1002078753064, //old one
       -1001737871127, //new one
-      `Offer Type: ${session.offerType}\n` +
+      `I Want To ${session.offerType}\n` +
         `Product Name: ${session.productName}\n` +
         session.selectedValues
           .map((item) => `${item.property}: ${item.value}`)
