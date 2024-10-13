@@ -1054,174 +1054,178 @@ function command(bot) {
     }
   });
   bot.on("text", async (ctx) => {
-    const { text } = ctx.message;
-    const { session } = ctx;
+    if (ctx.chat.id !== -1001737871127) {
+      //new one
 
-    if (
-      session.step !== "waitingForQuantity" &&
-      session.step !== "waitingForQuantityEdit" &&
-      session.step !== "WaitingForCommentText" &&
-      session.step != "waitingForName" &&
-      session.step !== "waitingForNameToViewContact" &&
-      session.step !== "waitingForNameToSelectPreference" &&
-      session.step !== "waitingForPhoneToSelectPreference" &&
-      session.step != "waitingForNameEdit" &&
-      session.step != "waitingForEditedNameToViewContact" &&
-      session.step != "waitingForNameEditToViewContact" &&
-      session.step != "waitingForPhone" &&
-      session.step != "waitingForEditedPhoneToViewContact" &&
-      session.step != "waitingForPhoneToViewContact" &&
-      session.step != "waitingForPhoneEdit"
-    ) {
-      ctx.reply("you cant enter a text");
-    } else {
-      if (session) {
-        switch (session.step) {
-          case "WaitingForCommentText":
-            session.comment = text;
+      const { text } = ctx.message;
+      const { session } = ctx;
 
-            try {
-              const user = await checkUser(ctx.chat.id);
+      if (
+        session.step !== "waitingForQuantity" &&
+        session.step !== "waitingForQuantityEdit" &&
+        session.step !== "WaitingForCommentText" &&
+        session.step != "waitingForName" &&
+        session.step !== "waitingForNameToViewContact" &&
+        session.step !== "waitingForNameToSelectPreference" &&
+        session.step !== "waitingForPhoneToSelectPreference" &&
+        session.step != "waitingForNameEdit" &&
+        session.step != "waitingForEditedNameToViewContact" &&
+        session.step != "waitingForNameEditToViewContact" &&
+        session.step != "waitingForPhone" &&
+        session.step != "waitingForEditedPhoneToViewContact" &&
+        session.step != "waitingForPhoneToViewContact" &&
+        session.step != "waitingForPhoneEdit"
+      ) {
+        ctx.reply("you cant enter a text");
+      } else {
+        if (session) {
+          switch (session.step) {
+            case "WaitingForCommentText":
+              session.comment = text;
 
-              await saveRating(
-                session.ratingValue,
-                session.comment,
-                user.id,
-                session.infoId
-              );
-              ctx.reply("Rating Saved");
-            } catch (error) {
-              console.error("Error Saving Rating", error);
-            }
-            break;
-          case "waitingForQuantity":
-            const quantity = text;
+              try {
+                const user = await checkUser(ctx.chat.id);
 
-            if (isNaN(quantity)) {
-              ctx.reply("Please enter only numbers.");
-              return; // Exit early if it's not a number
-            }
-
-            session.quantity = quantity;
-
-            try {
-              const user = await checkUser(ctx.chat.id);
-
-              if (user) {
-                session.businessType = user.business_type;
-                session.username = user.name;
-                session.phoneNumber = user.contact_information;
-                confirmEditDiscardWithoutUser(ctx, session);
-                session.step = "waitingForConfirmationWithoutUser";
-              } else {
-                ctx.reply("Enter your name");
-                ctx.session.step = "waitingForName";
+                await saveRating(
+                  session.ratingValue,
+                  session.comment,
+                  user.id,
+                  session.infoId
+                );
+                ctx.reply("Rating Saved");
+              } catch (error) {
+                console.error("Error Saving Rating", error);
               }
-            } catch (error) {
-              console.error("Error checking user registration:", error);
-              ctx.reply(
-                "An error occurred while checking user registration. Please try again later."
-              );
-            }
-            break;
-          case "waitingForEditedNameToViewContact":
-            session.name = text;
-            confirmEditDiscardOnlyUser(ctx, session);
-            session.step = "waitingForConfirmationWithoutUser";
-            break;
-          case "waitingForEditedPhoneToViewContact":
-            session.phone = text;
-            if (phoneNumRegExp.test(session.phone)) {
+              break;
+            case "waitingForQuantity":
+              const quantity = text;
+
+              if (isNaN(quantity)) {
+                ctx.reply("Please enter only numbers.");
+                return; // Exit early if it's not a number
+              }
+
+              session.quantity = quantity;
+
+              try {
+                const user = await checkUser(ctx.chat.id);
+
+                if (user) {
+                  session.businessType = user.business_type;
+                  session.username = user.name;
+                  session.phoneNumber = user.contact_information;
+                  confirmEditDiscardWithoutUser(ctx, session);
+                  session.step = "waitingForConfirmationWithoutUser";
+                } else {
+                  ctx.reply("Enter your name");
+                  ctx.session.step = "waitingForName";
+                }
+              } catch (error) {
+                console.error("Error checking user registration:", error);
+                ctx.reply(
+                  "An error occurred while checking user registration. Please try again later."
+                );
+              }
+              break;
+            case "waitingForEditedNameToViewContact":
+              session.name = text;
               confirmEditDiscardOnlyUser(ctx, session);
-            } else {
-              ctx.reply(
-                "Phone number id Invalid. Please enter valid phone number"
-              );
-            }
-            session.step = "waitingForConfirmationWithoutUser";
-            break;
-          case "waitingForNameEdit":
-            session.name = text;
+              session.step = "waitingForConfirmationWithoutUser";
+              break;
+            case "waitingForEditedPhoneToViewContact":
+              session.phone = text;
+              if (phoneNumRegExp.test(session.phone)) {
+                confirmEditDiscardOnlyUser(ctx, session);
+              } else {
+                ctx.reply(
+                  "Phone number id Invalid. Please enter valid phone number"
+                );
+              }
+              session.step = "waitingForConfirmationWithoutUser";
+              break;
+            case "waitingForNameEdit":
+              session.name = text;
 
-            confirmEditDiscardWithUser(ctx, session);
-            session.step = "waitingForConfirmationWithoutUser";
-            break;
-
-          case "waitingForQuantityEdit":
-            const quantity1 = text;
-
-            // Check if the input is a valid number
-            if (isNaN(quantity1)) {
-              ctx.reply("Please enter only numbers.");
-              return; // Exit early if it's not a number
-            }
-
-            session.quantity = quantity1;
-
-            confirmEditDiscardWithUser(ctx, session);
-            session.step = "waitingForConfirmationWithoutUser";
-
-            break;
-
-          case "waitingForName":
-            session.name = text;
-            ctx.reply("enter your Phone number");
-            session.step = "waitingForPhone";
-            break;
-          case "waitingForPhone":
-            session.phone = text;
-            if (phoneNumRegExp.test(session.phone)) {
-              BusinessTypeMenu(ctx);
-              session.step = "waitingForBusinessType";
-            } else {
-              ctx.reply(
-                "Phone number id Invalid. Please enter valid phone number"
-              );
-            }
-            break;
-          case "waitingForPhoneEdit":
-            session.phone = text;
-            if (phoneNumRegExp.test(session.phone)) {
               confirmEditDiscardWithUser(ctx, session);
               session.step = "waitingForConfirmationWithoutUser";
-            } else {
-              ctx.reply(
-                "Phone number id Invalid. Please enter valid phone number"
-              );
-            }
-            break;
-          case "waitingForNameToViewContact":
-            session.name = text;
-            ctx.reply("enter your Phone number");
-            session.step = "waitingForPhoneToViewContact";
-            break;
-          case "waitingForNameToSelectPreference":
-            session.name = text;
-            ctx.reply("Enter Phone number");
-            session.step = "waitingForPhoneToSelectPreference";
-            break;
-          case "waitingForPhoneToViewContact":
-            session.phone = text;
-            if (phoneNumRegExp.test(session.phone)) {
-              BusinessTypeMenu(ctx);
-              session.step = "waitingForBusinessTypeToViewContact";
-            } else {
-              ctx.reply(
-                "Phone number id Invalid. Please enter valid phone number"
-              );
-            }
-            break;
-          case "waitingForPhoneToSelectPreference":
-            session.phone = text;
-            if (phoneNumRegExp.test(session.phone)) {
-              BusinessTypeMenu(ctx);
-              session.step = "waitingForBusinessTypeToSelectPreference";
-            } else {
-              ctx.reply(
-                "Phone number id Invalid. Please enter valid phone number"
-              );
-            }
-            break;
+              break;
+
+            case "waitingForQuantityEdit":
+              const quantity1 = text;
+
+              // Check if the input is a valid number
+              if (isNaN(quantity1)) {
+                ctx.reply("Please enter only numbers.");
+                return; // Exit early if it's not a number
+              }
+
+              session.quantity = quantity1;
+
+              confirmEditDiscardWithUser(ctx, session);
+              session.step = "waitingForConfirmationWithoutUser";
+
+              break;
+
+            case "waitingForName":
+              session.name = text;
+              ctx.reply("enter your Phone number");
+              session.step = "waitingForPhone";
+              break;
+            case "waitingForPhone":
+              session.phone = text;
+              if (phoneNumRegExp.test(session.phone)) {
+                BusinessTypeMenu(ctx);
+                session.step = "waitingForBusinessType";
+              } else {
+                ctx.reply(
+                  "Phone number id Invalid. Please enter valid phone number"
+                );
+              }
+              break;
+            case "waitingForPhoneEdit":
+              session.phone = text;
+              if (phoneNumRegExp.test(session.phone)) {
+                confirmEditDiscardWithUser(ctx, session);
+                session.step = "waitingForConfirmationWithoutUser";
+              } else {
+                ctx.reply(
+                  "Phone number id Invalid. Please enter valid phone number"
+                );
+              }
+              break;
+            case "waitingForNameToViewContact":
+              session.name = text;
+              ctx.reply("enter your Phone number");
+              session.step = "waitingForPhoneToViewContact";
+              break;
+            case "waitingForNameToSelectPreference":
+              session.name = text;
+              ctx.reply("Enter Phone number");
+              session.step = "waitingForPhoneToSelectPreference";
+              break;
+            case "waitingForPhoneToViewContact":
+              session.phone = text;
+              if (phoneNumRegExp.test(session.phone)) {
+                BusinessTypeMenu(ctx);
+                session.step = "waitingForBusinessTypeToViewContact";
+              } else {
+                ctx.reply(
+                  "Phone number id Invalid. Please enter valid phone number"
+                );
+              }
+              break;
+            case "waitingForPhoneToSelectPreference":
+              session.phone = text;
+              if (phoneNumRegExp.test(session.phone)) {
+                BusinessTypeMenu(ctx);
+                session.step = "waitingForBusinessTypeToSelectPreference";
+              } else {
+                ctx.reply(
+                  "Phone number id Invalid. Please enter valid phone number"
+                );
+              }
+              break;
+          }
         }
       }
     }
