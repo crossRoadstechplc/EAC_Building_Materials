@@ -6,7 +6,7 @@ async function viewContact(bot, ctx) {
   try {
     const offers = await fetchOffer(offerId);
 
-    let message = `Product Name: ${offers.product_name}`;
+    let message = `I Want To: ${offers.offer_type}\nProduct Name: ${offers.product_name}`;
 
     if (offers.grade) {
       message += `\nGrade: ${offers.grade}`;
@@ -22,7 +22,7 @@ async function viewContact(bot, ctx) {
       message += `\nProcess: ${offers.process}`;
     }
 
-    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nI Want To ${offers.offer_type}`;
+    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\n`;
 
     await ctx.reply(message, {
       reply_markup: {
@@ -47,7 +47,7 @@ async function viewFullContact(bot, ctx) {
     const user = await checkUser(ctx.chat.id);
     const offers = await fetchOffer(offerId);
     if (offers.product_name) {
-      let message = `Product Name: ${offers.product_name}`;
+      let message = `I Want To: ${offers.offer_type}\nProduct Name: ${offers.product_name}`;
 
       if (offers.grade) {
         message += `\nGrade: ${offers.grade}`;
@@ -62,7 +62,7 @@ async function viewFullContact(bot, ctx) {
         message += `\nProcess: ${offers.process}`;
       }
 
-      message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nI Want To ${offers.offer_type}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
+      message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
 
       await ctx.reply(message);
       try {
