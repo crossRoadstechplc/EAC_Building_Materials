@@ -22,7 +22,7 @@ async function viewContact(bot, ctx) {
       message += `\nProcess: ${offers.process}`;
     }
 
-    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nOffer Type: ${offers.offer_type}`;
+    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nI Want To ${offers.offer_type}`;
 
     await ctx.reply(message, {
       reply_markup: {
@@ -62,7 +62,7 @@ async function viewFullContact(bot, ctx) {
         message += `\nProcess: ${offers.process}`;
       }
 
-      message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nOffer Type: ${offers.offer_type}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
+      message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nI Want To ${offers.offer_type}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
 
       await ctx.reply(message);
       try {
