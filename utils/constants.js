@@ -51,6 +51,10 @@ async function BusinessTypeMenu(ctx) {
         Markup.button.callback("EXPORTER / ላኪ", "Exporter"),
         Markup.button.callback("BUYING AGENT / የውጭ ገዢ", "Buying Agent"),
       ],
+      [
+       
+        Markup.button.callback("AKRABI AGENT / አቅራቢ ኤጀንት", "Buying Agent"),
+      ],
     ])
   );
 
