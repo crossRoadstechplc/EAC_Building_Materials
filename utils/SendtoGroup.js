@@ -1,5 +1,7 @@
 async function sendItemToGroup(ctx, offerData, session) {
   const botUsername = "https://t.me/EACBuildingMaterialsBot";
+  // const botUsername = "https://t.me/ykftestbot";
+
   offerData;
 
   const botLink = `${botUsername}?start=${offerData.id}`;
@@ -7,7 +9,7 @@ async function sendItemToGroup(ctx, offerData, session) {
 
   try {
     let topicMessageId = 9612; //new
-    // let topicMessageId = 331;//old one
+    // let topicMessageId = 331; //old one
 
     await ctx.telegram.sendMessage(
       // -1002078753064, //old one

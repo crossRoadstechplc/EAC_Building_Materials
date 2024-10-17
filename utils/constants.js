@@ -51,10 +51,7 @@ async function BusinessTypeMenu(ctx) {
         Markup.button.callback("EXPORTER / ላኪ", "Exporter"),
         Markup.button.callback("BUYING AGENT / የውጭ ገዢ", "Buying Agent"),
       ],
-      [
-       
-        Markup.button.callback("AKRABI AGENT / አቅራቢ ኤጀንት", "Buying Agent"),
-      ],
+      [Markup.button.callback("AKRABI AGENT / አቅራቢ ኤጀንት", "Buying Agent")],
     ])
   );
 
@@ -75,10 +72,10 @@ function resetSession(session) {
 
 async function confirmEditDiscardOnlyUser(ctx, session) {
   sentMessage = await ctx.reply(
-    `To complete posting offer verify your choices:\n` +
-      `Full Name: ${session.name}\n` +
-      `Business Type: ${session.businessType}\n` +
-      `Phone number: ${session.phone}\n`,
+    `To complete posting offer verify your choices / ምዝገባ ለመጨረስ ምርጫዎን ያረጋግጡ:\n` +
+      `Full Name / ስም: ${session.name}\n` +
+      `Business Type / የተሰማሩበት ንግድ: ${session.businessType}\n` +
+      `Phone number / ስልክ: ${session.phone}\n`,
     {
       reply_markup: {
         inline_keyboard: [
@@ -106,10 +103,10 @@ async function confirmEditDiscardOnlyUser(ctx, session) {
 
 async function confirmEditDiscardOnlyUserForPerf(ctx, session) {
   sentMessage = await ctx.reply(
-    `To complete posting offer verify your choices:\n` +
-      `Full Name: ${session.name}\n` +
-      `Business Type: ${session.businessType}\n` +
-      `Phone number: ${session.phone}\n`,
+    `To complete posting offer verify your choices / ምዝገባ ለመጨረስ ምርጫዎን ያረጋግጡ:\n` +
+      `Full Name / ስም: ${session.name}\n` +
+      `Business Type / የተሰማሩበት ንግድ: ${session.businessType}\n` +
+      `Phone number / ስልክ: ${session.phone}\n`,
     {
       reply_markup: {
         inline_keyboard: [
@@ -137,7 +134,7 @@ async function confirmEditDiscardOnlyUserForPerf(ctx, session) {
 
 async function confirmEditDiscardWithoutUser(ctx, session) {
   sentMessage = await ctx.reply(
-    `Please confirm the following information provided:\nProduct Name: ${session.productName}\n` +
+    `Please confirm the following information provided / የቀረበዉን መረጃ ያረጋግጡ:\nProduct Name / የምርት ስም: ${session.productName}\n` +
       session.selectedValues
         .map((item) => `${item.property}: ${item.value}`)
         .join("\n") +
@@ -162,10 +159,10 @@ async function confirmEditDiscardWithoutUser(ctx, session) {
 
 async function confirmEditDiscardWithUser(ctx, session) {
   sentMessage = await ctx.reply(
-    `To complete posting offer verify your choices:\nProduct Name: ${session.productName}\n` +
-      `Full Name: ${session.name}\n` +
-      `Business Type: ${session.businessType}\n` +
-      `Phone number: ${session.phone}\n` +
+    `To complete posting offer verify your choices / ምዝገባ ለመጨረስ ምርጫዎን ያረጋግጡ:\nProduct Name / የምርት ስም: ${session.productName}\n` +
+      `Full Name / ስም: ${session.name}\n` +
+      `Business Type / የተሰማሩበት ንግድ: ${session.businessType}\n` +
+      `Phone number / ስልክ: ${session.phone}\n` +
       session.selectedValues
         .map((item) => `${item.property}: ${item.value}`)
         .join("\n") +

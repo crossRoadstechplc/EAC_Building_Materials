@@ -20,7 +20,7 @@ async function processEditChoices(ctx) {
       };
 
       sentMessage = await ctx.reply(
-        `Choose a property to edit:`,
+        `Choose a property to edit / የሚታደስ ይምረጡ:`,
         inlineKeyboard
       );
       if (sentMessage) {
@@ -45,7 +45,10 @@ async function processEditChoices(ctx) {
       },
     };
 
-    sentMessage = await ctx.reply(`Choose a property to edit:`, inlineKeyboard);
+    sentMessage = await ctx.reply(
+      `Choose a property to edit / የሚታደስ ይምረጡ:`,
+      inlineKeyboard
+    );
     if (sentMessage) {
       ctx.session.lastMessageId = sentMessage.message_id;
     }
@@ -70,7 +73,7 @@ async function processEditChoices(ctx) {
       };
 
       sentMessage = await ctx.reply(
-        `Choose a Property to edit:`,
+        `Choose a Property to edit / የሚታደስ ይምረጡ:`,
         inlineKeyboard
       );
 
@@ -98,7 +101,10 @@ async function processEditChoices(ctx) {
       },
     };
 
-    sentMessage = await ctx.reply(`Choose a Property to edit:`, inlineKeyboard);
+    sentMessage = await ctx.reply(
+      `Choose a Property to edit / የሚታደስ ይምረጡ:`,
+      inlineKeyboard
+    );
 
     if (sentMessage) {
       ctx.session.lastMessageId = sentMessage.message_id;
@@ -142,7 +148,7 @@ async function EditUser(ctx) {
   };
 
   sentMessage = await ctx.reply(
-    "Choose what you want to edit:",
+    "Choose what you want to edit / እባኮ መቀየር የሚፈልጉትን ይምረጡ:",
     inlineKeyboard
   );
 

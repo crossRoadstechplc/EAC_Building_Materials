@@ -50,6 +50,8 @@ function command(bot) {
   bot.use(localSession.middleware());
 
   bot.start(async (ctx) => {
+    ctx.session = {};
+
     const startPayload = ctx.startPayload;
     ctx.session.offerId = startPayload;
 
@@ -98,16 +100,19 @@ function command(bot) {
         ctx.callbackQuery.message.message_id
       );
 
-      const sentMessage = await ctx.reply("Please choose the offer type:", {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: "BUY", callback_data: "buy" },
-              { text: "SELL", callback_data: "sell" },
+      const sentMessage = await ctx.reply(
+        "Please choose the offer type / እባክዎ አይነቱን ይምረጡ:",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "BUY", callback_data: "buy" },
+                { text: "SELL", callback_data: "sell" },
+              ],
             ],
-          ],
-        },
-      });
+          },
+        }
+      );
 
       if (sentMessage) {
         ctx.session.lastMessageId = sentMessage.message_id;
@@ -128,7 +133,7 @@ function command(bot) {
     } catch (error) {
       console.error("Failed to delete message:", error);
       await ctx.reply(
-        "Sorry, there was an error processing your request. Please try again later."
+        "Sorry, there was an error processing your request. Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
       );
     }
   });
@@ -161,7 +166,7 @@ function command(bot) {
         };
 
         await ctx.reply(
-          "Please select a product for which you would like to receive information:",
+          "Please select a product for which you would like to receive information / እባክዎ መረጃ መቀበል ለሚፈልጉትን የምርት አይነት ይምረጡ።:",
           inlineKeyboard
         );
       }
@@ -233,7 +238,7 @@ function command(bot) {
             };
 
             await ctx.reply(
-              "Please select a product for which you would like to receive information:",
+              "Please select a product for which you would like to receive information / መረጃ ሊቀበሉ የሚፈልጉትን ምርት ይምረጡ:",
               inlineKeyboard
             );
           }
@@ -243,12 +248,16 @@ function command(bot) {
           try {
             const user = await checkUser(ctx.chat.id);
             if (!user) {
-              return ctx.reply("User not found. Please register first.");
+              return ctx.reply(
+                "User not found. Please register first. / እባክዎ ለመቀጠል መጀመሪያ ይመዝገቡ"
+              );
             }
             session.userId = user.id;
             const preferenceList = await fetchPreferences(user.id, categoryId);
             if (!preferenceList || preferenceList.length === 0) {
-              return ctx.reply("No preferences found to remove.");
+              return ctx.reply(
+                "No preferences found to remove. / ለማስወገድ ምንም ምርጫዎች አልተገኙም"
+              );
             }
 
             const formattedPreference = preferenceList.map((preference) => {
@@ -273,10 +282,15 @@ function command(bot) {
               },
             };
 
-            await ctx.reply("Choose a preference:", inlineKeyboard);
+            await ctx.reply(
+              "Choose a preference / ምርጫዎን ይምረጡ:",
+              inlineKeyboard
+            );
           } catch (error) {
             console.error("Error in remove_preference command:", error);
-            ctx.reply("An error occurred. Please try again later.");
+            ctx.reply(
+              "An error occurred. Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+            );
           }
         });
 
@@ -311,8 +325,7 @@ function command(bot) {
         session.currentPropertyIndex = 0;
         await processNextProperty(ctx);
       } catch (error) {
-        console.error("Failed to fetch property: ", error);
-        ctx.reply("Failed to fetch property");
+        ctx.reply("Failed to fetch property / መረጃውን ማግኛት አልተቻለም");
       }
     } else if (data.startsWith("Preference_product_")) {
       const productId = parseInt(data.split("_")[2], 10); // Convert productId to an integer
@@ -370,8 +383,10 @@ function command(bot) {
       session.preferenceProductNames = selectedProductNames;
 
       if (!user) {
-        ctx.reply("Register first and save preference");
-        ctx.reply("Enter your name");
+        ctx.reply(
+          "Register first and save preference. / በመጀመሪያ ይመዝገቡ፣ በመቀጠል ምርጫዎን ያስቀምጡ"
+        );
+        ctx.reply("Enter your name. / ስም ያስግቡ");
         session.step = "waitingForNameToSelectPreference";
       } else {
         session.UserID = user.id; // Ensure the session is updated with the user ID
@@ -394,7 +409,7 @@ function command(bot) {
               preferenceAlreadyExists = true; // Set flag to true if any preference exists
             } else {
               ctx.reply(
-                `Error saving preference for product with ID ${productId}.`
+                `Error saving preference for product with ID ${productId}. / ለ${productId} መለያ ቁጥር የምርት የመመዝግብ ሂደቱ አልተሳካም`
               );
             }
 
@@ -404,12 +419,18 @@ function command(bot) {
 
         // After the loop, only send the success message if all preferences were saved successfully
         if (allPreferencesSaved) {
-          ctx.reply(`Saved Preferences: ${selectedProductNames.join(", ")}`);
+          ctx.reply(
+            `Saved Preferences / የተመዘገቡ ምርጫዎች: ${selectedProductNames.join(
+              ", "
+            )}`
+          );
         }
 
         // If any preference already existed, print the message once
         if (preferenceAlreadyExists) {
-          ctx.reply(`One or more preferences already exist.`);
+          ctx.reply(
+            `One or more preferences already exist. / አንድ ወይም ከአንድ በላይ ምርጫዎች ከዚህ በፊት ተመዝግበዋል`
+          );
         }
       }
     } else if (data.startsWith("Preference_selected_")) {
@@ -472,7 +493,7 @@ function command(bot) {
       }
 
       ctx.reply(
-        `Deleted Preferences: ${selectedPreferences
+        `Deleted Preferences / የተሰረዙ ምርጫዎች: ${selectedPreferences
           .map((pref) => pref.product.name)
           .join(", ")}`
       );
@@ -658,8 +679,11 @@ function command(bot) {
       ctx.session.valueId = valueId;
       ctx.session.valueName = valueName;
       ctx.session.propertyId = propertyId;
-      session.selectedValues = [];
 
+      // Ensure session.selectedValues is an array if not already
+      session.selectedValues = session.selectedValues || [];
+
+      // Push the new selection without resetting the array
       session.selectedValues.push({
         property: propertyName,
         value: valueName,
@@ -746,7 +770,7 @@ function command(bot) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
       session.metrics = data;
-      ctx.reply("Please enter a quantity:");
+      ctx.reply("Please enter a quantity / እባክዎ መጠኑን ያስገቡ:");
       session.step = "waitingForQuantity";
     } else if (data === "editWithoutUser") {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -765,12 +789,12 @@ function command(bot) {
     } else if (data === "edit_username_to_viewContact") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("Enter your full name: ");
+      ctx.reply("Enter your full name / ሙሉ ስምዎን ያስገቡ: ");
       session.step = "waitingForEditedNameToViewContact";
     } else if (data === "edit_phoneNumber_to_viewContact") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("Enter your Phone number: ");
+      ctx.reply("Enter your Phone number / ስልክ ቁጥርዎን ያስገቡ: ");
       session.step = "waitingForEditedPhoneToViewContact";
     } else if (data === "edit_businessType_to_viewContact") {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -796,7 +820,9 @@ function command(bot) {
         session.currentPropertyIndex = propertyIndex;
         await processPropertyForEdit(ctx, propertyIndex, true);
       } else {
-        ctx.reply(`${propertyName} property not found.`);
+        ctx.reply(
+          `${propertyName} property not found. / የ${propertyName} መረጃ አልተገኘም`
+        );
       }
     } else if (data.startsWith("edit_propertyWithuser_")) {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -815,7 +841,9 @@ function command(bot) {
         session.currentPropertyIndex = propertyIndex;
         await processPropertyForEdit(ctx, propertyIndex, true, true);
       } else {
-        ctx.reply(`${propertyName} property not found.`);
+        ctx.reply(
+          `${propertyName} property not found. / የ${propertyName} መረጃ አልተገኘም`
+        );
       }
     } else if (data === "edit_metrics") {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -843,27 +871,27 @@ function command(bot) {
     } else if (data === "edit_quantity") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("enter the quantity");
+      ctx.reply("enter the quantity / መጠን ያስገቡ");
       session.step = "waitingForQuantity";
     } else if (data === "edit_quantityWithUser") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("enter the quantity");
+      ctx.reply("enter the quantity / መጠን ያስገቡ");
       session.step = "waitingForQuantityEdit";
     } else if (data === "edit_username") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("enter your full name");
+      ctx.reply("enter your full name / ሙሉ ስምዎን ያስገቡ:");
       session.step = "waitingForNameEdit";
     } else if (data === "edit_username_to_viewContact") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("enter your full name");
+      ctx.reply("enter your full name / ሙሉ ስምዎን ያስገቡ:");
       session.step = "waitingForNameEditToViewContact";
     } else if (data === "edit_phoneNumber") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("enter your Phone number");
+      ctx.reply("enter your Phone number / ስልክ ቁጥርዎን ያስገቡ: ");
       session.step = "waitingForPhoneEdit";
     } else if (data === "edit_businessType") {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -873,7 +901,7 @@ function command(bot) {
     } else if (data === "discardWithoutUser") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("Discarded");
+      ctx.reply("Discarded / ተሰርዟል");
       resetSession(session);
     } else if (
       data === "Smallholder" ||
@@ -891,13 +919,16 @@ function command(bot) {
         confirmEditDiscardWithUser(ctx, session);
       } else if (session.step === "waitingForBusinessTypeToViewContact") {
         ctx.reply(
-          "https://telegra.ph/Terms-Conditions-and-Privacy-Statement-01-11",
+          "Please accept our terms and conditions / እባክዎ ውል አና ሁኔታዎቻችንን ይቀበሉ\nhttps://telegra.ph/Terms-Conditions-and-Privacy-Statement-01-11",
           {
             reply_markup: {
               inline_keyboard: [
                 [
-                  { text: "Accept", callback_data: "acceptToViewContact" },
-                  { text: "Decline", callback_data: "decline" },
+                  {
+                    text: "Accept / ተቀበል",
+                    callback_data: "acceptToViewContact",
+                  },
+                  { text: "Decline / ሰርዝ", callback_data: "decline" },
                 ],
               ],
             },
@@ -909,7 +940,7 @@ function command(bot) {
 
       const user = await checkUser(ctx.chat.id);
       if (!user) {
-        ctx.reply("Enter your name");
+        ctx.reply("Enter your name. / ስም ያስግቡ");
         session.step = "waitingForNameToViewContact";
       } else {
         await viewFullContact(bot, ctx);
@@ -927,27 +958,30 @@ function command(bot) {
       });
 
       // Ask the user if they want to add an additional comment
-      ctx.reply("Do you want to add additional comment: ", {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "Yes", callback_data: "WaitingForComment" }],
-            [{ text: "No", callback_data: "NoComment" }],
-          ],
-        },
-      });
+      ctx.reply(
+        "Do you want to add additional comment? / አስታየት ማክሰን ትፈልጋለህ? ",
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "Yes", callback_data: "WaitingForComment" }],
+              [{ text: "No", callback_data: "NoComment" }],
+            ],
+          },
+        }
+      );
     } else if (data === "NoComment") {
       await ctx.telegram.deleteMessage(chatId, messageId);
       try {
         const user = await checkUser(ctx.chat.id);
         await saveRating(session.ratingValue, null, user.id, session.infoId);
-        ctx.reply("Rating saved");
+        ctx.reply("Rating saved / አስታየት ተመዝግቧል");
       } catch (error) {
         console.error("Error Saving Rating", error);
       }
     } else if (data === "WaitingForComment") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
-      ctx.reply("Enter the comment you want to add: ");
+      ctx.reply("Enter the comment you want to add / የፈለጉትን አስታየት ያስገቡ: ");
       session.step = "WaitingForCommentText";
     }
     if (data === "accept") {
@@ -958,7 +992,7 @@ function command(bot) {
       } catch (error) {
         console.error("Error handling accept callback:", error);
         ctx.reply(
-          "An error occurred while processing your request. Please try again later."
+          "An error occurred while processing your request. Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
         );
       }
     }
@@ -972,7 +1006,7 @@ function command(bot) {
       } catch (error) {
         console.error("Error handling accept callback:", error);
         ctx.reply(
-          "An error occurred while processing your request. Please try again later."
+          "An error occurred while processing your request. Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
         );
       }
     } else if (data === "confirmWithoutUser") {
@@ -1009,7 +1043,7 @@ function command(bot) {
             preferenceAlreadyExists = true; // Set flag to true if any preference exists
           } else {
             ctx.reply(
-              `Error saving preference for product with ID ${productId}.`
+              `Error saving preference for product with ID ${productId}. / ለ${productId} መለያ ቁጥር የምርት የመመዝግብ ሂደቱ አልተሳካም`
             );
           }
 
@@ -1020,13 +1054,17 @@ function command(bot) {
       // After the loop, only send the success message if all preferences were saved successfully
       if (allPreferencesSaved) {
         ctx.reply(
-          `Saved Preferences: ${session.preferenceProductNames.join(", ")}`
+          `Saved Preferences / የተመዘገቡ ምርጫዎች: ${session.preferenceProductNames.join(
+            ", "
+          )}`
         );
       }
 
       // If any preference already existed, print the message once
       if (preferenceAlreadyExists) {
-        ctx.reply(`One or more preferences already exist.`);
+        ctx.reply(
+          `One or more preferences already exist. / አንድ ወይም ከአንድ በላይ ምርጫዎች ከዚህ በፊት ተመዝግበዋል`
+        );
       }
     } else if (data === "confirmUserToViewContact") {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -1038,13 +1076,13 @@ function command(bot) {
 
       session.businessType = data;
       await ctx.reply(
-        "https://telegra.ph/Terms-Conditions-and-Privacy-Statement-01-11",
+        "Please accept our terms and conditions / እባክዎ ውል አና ሁኔታዎቻችንን ይቀበሉ\nhttps://telegra.ph/Terms-Conditions-and-Privacy-Statement-01-11",
         {
           reply_markup: {
             inline_keyboard: [
               [
-                { text: "Accept", callback_data: "accept" },
-                { text: "Decline", callback_data: "decline" },
+                { text: "Accept / ተቀበል", callback_data: "accept" },
+                { text: "Decline / ሰርዝ", callback_data: "decline" },
               ],
             ],
           },
@@ -1076,7 +1114,7 @@ function command(bot) {
         session.step != "waitingForPhoneToViewContact" &&
         session.step != "waitingForPhoneEdit"
       ) {
-        ctx.reply("you cant enter a text");
+        ctx.reply("You can't enter a text. / ፅሁፍ ማስገባት አይችሉም");
       } else {
         if (session) {
           switch (session.step) {
@@ -1092,7 +1130,7 @@ function command(bot) {
                   user.id,
                   session.infoId
                 );
-                ctx.reply("Rating Saved");
+                ctx.reply("Rating Saved / አስታየት ተመዝግቧል");
               } catch (error) {
                 console.error("Error Saving Rating", error);
               }
@@ -1101,7 +1139,7 @@ function command(bot) {
               const quantity = text;
 
               if (isNaN(quantity)) {
-                ctx.reply("Please enter only numbers.");
+                ctx.reply("Please enter only numbers. / ቁጥር ብቻ ያስገቡ");
                 return; // Exit early if it's not a number
               }
 
@@ -1117,13 +1155,13 @@ function command(bot) {
                   confirmEditDiscardWithoutUser(ctx, session);
                   session.step = "waitingForConfirmationWithoutUser";
                 } else {
-                  ctx.reply("Enter your name");
+                  ctx.reply("Enter your name. / ስም ያስግቡ");
                   ctx.session.step = "waitingForName";
                 }
               } catch (error) {
                 console.error("Error checking user registration:", error);
                 ctx.reply(
-                  "An error occurred while checking user registration. Please try again later."
+                  "An error occurred while checking user registration. Please try again later. / ምዝገባለይ ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
                 );
               }
               break;
@@ -1138,7 +1176,7 @@ function command(bot) {
                 confirmEditDiscardOnlyUser(ctx, session);
               } else {
                 ctx.reply(
-                  "Phone number id Invalid. Please enter valid phone number"
+                  "Phone number id Invalid. Please enter valid phone number / ያስገቡት ስልክ ቁጥር ትክክል አይደለም። እባኮን በድጋሚ ይሞክሩ"
                 );
               }
               session.step = "waitingForConfirmationWithoutUser";
@@ -1155,7 +1193,7 @@ function command(bot) {
 
               // Check if the input is a valid number
               if (isNaN(quantity1)) {
-                ctx.reply("Please enter only numbers.");
+                ctx.reply("Please enter only numbers. / ቁጥር ብቻ ያስገቡ");
                 return; // Exit early if it's not a number
               }
 
@@ -1168,7 +1206,7 @@ function command(bot) {
 
             case "waitingForName":
               session.name = text;
-              ctx.reply("enter your Phone number");
+              ctx.reply("enter your Phone number / ስልክ ቁጥርዎን ያስገቡ: ");
               session.step = "waitingForPhone";
               break;
             case "waitingForPhone":
@@ -1178,7 +1216,7 @@ function command(bot) {
                 session.step = "waitingForBusinessType";
               } else {
                 ctx.reply(
-                  "Phone number id Invalid. Please enter valid phone number"
+                  "Phone number id Invalid. Please enter valid phone number / ያስገቡት ስልክ ቁጥር ትክክል አይደለም። እባኮን በድጋሚ ይሞክሩ"
                 );
               }
               break;
@@ -1189,18 +1227,18 @@ function command(bot) {
                 session.step = "waitingForConfirmationWithoutUser";
               } else {
                 ctx.reply(
-                  "Phone number id Invalid. Please enter valid phone number"
+                  "Phone number id Invalid. Please enter valid phone number / ያስገቡት ስልክ ቁጥር ትክክል አይደለም። እባኮን በድጋሚ ይሞክሩ"
                 );
               }
               break;
             case "waitingForNameToViewContact":
               session.name = text;
-              ctx.reply("enter your Phone number");
+              ctx.reply("enter your Phone number / ስልክ ቁጥርዎን ያስገቡ:");
               session.step = "waitingForPhoneToViewContact";
               break;
             case "waitingForNameToSelectPreference":
               session.name = text;
-              ctx.reply("Enter Phone number");
+              ctx.reply("Enter Phone number. / ስልኮትን ያስገቡ");
               session.step = "waitingForPhoneToSelectPreference";
               break;
             case "waitingForPhoneToViewContact":
@@ -1210,7 +1248,7 @@ function command(bot) {
                 session.step = "waitingForBusinessTypeToViewContact";
               } else {
                 ctx.reply(
-                  "Phone number id Invalid. Please enter valid phone number"
+                  "Phone number id Invalid. Please enter valid phone number / ያስገቡት ስልክ ቁጥር ትክክል አይደለም። እባኮን በድጋሚ ይሞክሩ"
                 );
               }
               break;
@@ -1221,7 +1259,7 @@ function command(bot) {
                 session.step = "waitingForBusinessTypeToSelectPreference";
               } else {
                 ctx.reply(
-                  "Phone number id Invalid. Please enter valid phone number"
+                  "Phone number id Invalid. Please enter valid phone number / ያስገቡት ስልክ ቁጥር ትክክል አይደለም። እባኮን በድጋሚ ይሞክሩ"
                 );
               }
               break;

@@ -2,11 +2,15 @@ const { saveOffer } = require("../services/productServices");
 const { sendItemToGroup } = require("./SendtoGroup");
 const { registerUser } = require("../services/userServices");
 const { resetSession } = require("./constants");
+const { session } = require("telegraf");
 
 async function confirmWithoutUser(ctx, session) {
   try {
     const classProperty = session.selectedValues.find(
       (val) => val.property === "Class"
+    );
+    const brandProperty = session.selectedValues.find(
+      (val) => val.property === "Brand Name"
     );
     const typeProperty = session.selectedValues.find(
       (val) => val.property === "Type"
@@ -32,6 +36,7 @@ async function confirmWithoutUser(ctx, session) {
     };
 
     if (classProperty) offerData.class = classProperty.value;
+    if (brandProperty) offerData.brand_name = brandProperty.value;
     if (typeProperty) offerData.type = typeProperty.value;
     if (gradeProperty) offerData.grade = gradeProperty.value;
     if (regionProperty) offerData.region = regionProperty.value;
@@ -42,13 +47,13 @@ async function confirmWithoutUser(ctx, session) {
 
     await sendItemToGroup(ctx, offerData, session);
 
-    await ctx.reply("Offer posted successfully!");
+    await ctx.reply("Offer posted successfully! / ማዝገባዉ ተሳክቶል!");
 
     resetSession(ctx);
   } catch (error) {
     console.error("Error posting offer:", error);
     await ctx.reply(
-      "An error occurred while posting your offer. Please try again later."
+      "An error occurred while posting your offer. Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
     );
   }
 }
@@ -70,6 +75,9 @@ async function confirmWithUser(ctx, session) {
     try {
       const classProperty = session.selectedValues.find(
         (val) => val.property === "Class"
+      );
+      const brandProperty = session.selectedValues.find(
+        (val) => val.property === "Brand Name"
       );
       const typeProperty = session.selectedValues.find(
         (val) => val.property === "Type"
@@ -93,6 +101,7 @@ async function confirmWithUser(ctx, session) {
         chat_id: ctx.chat.id,
       };
       if (classProperty) offerData.class = classProperty.value;
+      if (brandProperty) offerData.brand_name = brandProperty.value;
       if (typeProperty) offerData.type = typeProperty.value;
       if (gradeProperty) offerData.grade = gradeProperty.value;
       if (regionProperty) offerData.region = regionProperty.value;
@@ -103,14 +112,14 @@ async function confirmWithUser(ctx, session) {
       offerData.id = result.offer["id"];
 
       await sendItemToGroup(ctx, offerData, session);
-      ctx.reply("Offer posted successfully!");
+      ctx.reply("Offer posted successfully! / ማዝገባዉ ተሳክቶል!");
       session.isNewUser = true;
       resetSession(ctx);
     } catch (error) {
       console.error("error posting offer");
     }
   } catch (error) {
-    console.error("error registering user", error);
+    console.error("error registering user / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ", error);
   }
 }
 
@@ -125,7 +134,7 @@ async function confirmUser(ctx, session) {
     );
   } catch (error) {
     console.error("error adding user ", error);
-    ctx.reply("error registering user");
+    ctx.reply("error registering user / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ");
   }
 }
 

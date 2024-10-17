@@ -5,11 +5,13 @@ async function viewContact(bot, ctx) {
   const offerId = ctx.session.offerId;
   try {
     const offers = await fetchOffer(offerId);
-
-    let message = `I Want To: ${offers.offer_type}\nProduct Name: ${offers.product_name}`;
+    let message = `Product Name: ${offers.product_name}`;
 
     if (offers.grade) {
       message += `\nGrade: ${offers.grade}`;
+    }
+    if (offers.brand_name) {
+      message += `\nBrand Name: ${offers.brand_name}`;
     }
 
     if (offers.class) {
@@ -22,7 +24,7 @@ async function viewContact(bot, ctx) {
       message += `\nProcess: ${offers.process}`;
     }
 
-    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\n`;
+    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nOffer Type: ${offers.offer_type}`;
 
     await ctx.reply(message, {
       reply_markup: {
@@ -34,7 +36,7 @@ async function viewContact(bot, ctx) {
   } catch (error) {
     console.error("Error fetching offer:", error);
     await ctx.reply(
-      "Sorry, an error occurred while fetching the offer details."
+      "Sorry, an error occurred while fetching the offer details. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
     );
   }
 }
@@ -47,11 +49,15 @@ async function viewFullContact(bot, ctx) {
     const user = await checkUser(ctx.chat.id);
     const offers = await fetchOffer(offerId);
     if (offers.product_name) {
-      let message = `I Want To: ${offers.offer_type}\nProduct Name: ${offers.product_name}`;
+      let message = `Product Name: ${offers.product_name}`;
 
       if (offers.grade) {
         message += `\nGrade: ${offers.grade}`;
       }
+      if (offers.brand_name) {
+        message += `\nBrand Name: ${offers.brand_name}`;
+      }
+
       if (offers.class) {
         message += `\nClass: ${offers.class}`;
       }
@@ -62,7 +68,7 @@ async function viewFullContact(bot, ctx) {
         message += `\nProcess: ${offers.process}`;
       }
 
-      message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
+      message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nOffer Type: ${offers.offer_type}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
 
       await ctx.reply(message);
       try {
@@ -93,12 +99,12 @@ async function viewFullContact(bot, ctx) {
         console.error("Error saving interaction:", error);
       }
     } else {
-      ctx.reply("No contact found");
+      ctx.reply("No contact found / ስልኩ አልተገኘም");
     }
   } catch (error) {
     console.error("Error fetching offer:", error);
     await ctx.reply(
-      "Sorry, an error occurred while fetching the offer details."
+      "Sorry, an error occurred while fetching the offer details. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
     );
   }
 }
