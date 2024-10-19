@@ -28,7 +28,7 @@ async function processProperty(
       }
 
       return {
-        text: truncatedValue, // Display truncated value if necessary
+        text: truncatedValue,
         callback_data: callbackData,
       };
     });
@@ -45,7 +45,7 @@ async function processProperty(
     };
 
     const sentMessage = await ctx.reply(
-      `Please select ${property.name} / ${property.name} ይምረጡ:`,
+      `Please select ${property.name} / እባክዎትን ይምረጡ:`,
       inlineKeyboard
     );
     session.propertyName = property.name;

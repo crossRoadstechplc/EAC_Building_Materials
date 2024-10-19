@@ -106,8 +106,8 @@ function command(bot) {
           reply_markup: {
             inline_keyboard: [
               [
-                { text: "BUY", callback_data: "buy" },
-                { text: "SELL", callback_data: "sell" },
+                { text: "BUY / ግዢ", callback_data: "buy" },
+                { text: "SELL / ሽያጭ", callback_data: "sell" },
               ],
             ],
           },
