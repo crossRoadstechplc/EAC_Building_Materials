@@ -138,4 +138,87 @@ async function confirmUser(ctx, session) {
   }
 }
 
-module.exports = { confirmWithoutUser, confirmWithUser, confirmUser };
+async function confirmWithUserForInquiry(ctx, session) {
+  try {
+    "name:", session.name;
+    "business_type:", session.businessType;
+    "contact_information:", session.contact_information;
+    "chat_id:", ctx.chat.id;
+
+    await registerUser(
+      session.name,
+      session.businessType,
+      1,
+      session.phone,
+      ctx.chat.id
+    );
+    try {
+      const offerData = {
+        product_name: session.productName,
+        description: session.productDescription,
+        status: true,
+        sent: false,
+        offer_type: session.offerType,
+        user_name: session.name,
+        phone_number: session.phone,
+        business_type: session.businessType,
+        chat_id: ctx.chat.id,
+      };
+
+      const result = await saveOffer(offerData);
+      result.offer["id"];
+
+      offerData.id = result.offer["id"];
+
+      await sendItemToGroup(ctx, offerData, session);
+      ctx.reply("Offer posted successfully! / ምዝገባዉ ተሳክቶል!");
+      session.isNewUser = true;
+      resetSession(ctx);
+    } catch (error) {
+      console.error("error posting offer");
+    }
+  } catch (error) {
+    console.error("error registering user", error);
+  }
+}
+
+async function confirmWithoutUserForInquiry(ctx, session) {
+  try {
+    const offerData = {
+      product_name: session.productName,
+      measurement: null,
+      quantity: null,
+      status: true,
+      sent: false,
+      offer_type: session.offerType,
+      user_name: session.username,
+      phone_number: session.phoneNumber,
+      business_type: session.businessType,
+      chat_id: ctx.chat.id,
+      description: session.productDescription,
+    };
+
+    const result = await saveOffer(offerData);
+
+    offerData.id = result.offer.id;
+
+    await sendItemToGroup(ctx, offerData, session);
+
+    await ctx.reply("Offer posted successfully! / ምዝገባዉ ተሳክቶል!");
+
+    resetSession(ctx);
+  } catch (error) {
+    console.error("Error posting offer:", error);
+    await ctx.reply(
+      "An error occurred while posting your offer. Please try again later / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+    );
+  }
+}
+
+module.exports = {
+  confirmWithoutUser,
+  confirmWithUser,
+  confirmUser,
+  confirmWithoutUserForInquiry,
+  confirmWithUserForInquiry,
+};

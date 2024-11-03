@@ -185,6 +185,55 @@ async function confirmEditDiscardWithUser(ctx, session) {
   }
 }
 
+async function confirmEditDiscardWithOutUserForInquiry(ctx, session) {
+  sentMessage = await ctx.reply(
+    `Please confirm the following information provided / የቀረበዉን መረጃ ያረጋግጡ:\nProduct Name / የምርት ስም: ${session.productName}\n` +
+      `Offer Type: ${session.offerType}` +
+      `\nDescription: ${session.productDescription}\n`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "Confirm", callback_data: "confirmWithoutUserForInquiry" },
+            { text: "Edit", callback_data: "editWithoutUserForInquiry" },
+            { text: "Discard", callback_data: "discardWithoutUserForInquiry" },
+          ],
+        ],
+      },
+    }
+  );
+
+  if (sentMessage) {
+    ctx.session.lastMessageId = sentMessage.message_id;
+  }
+}
+
+async function confirmEditDiscardWithUserForInquiry(ctx, session) {
+  sentMessage = await ctx.reply(
+    `To complete posting offer verify your choices / ምዝገባ ለመጨረስ ምርጫዎን ያረጋግጡ:\nProduct Name / የምርት ስም: ${session.productName}\n` +
+      `Full Name / ስም: ${session.name}\n` +
+      `Business Type / የተሰማሩበት ንግድ: ${session.businessType}\n` +
+      `Phone number / ስልክ: ${session.phone}\n` +
+      `Offer Type: ${session.offerType}` +
+      `\nDescription: ${session.productDescription}`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "Confirm", callback_data: "confirmWithUserForInquiry" },
+            { text: "Edit", callback_data: "editWithUserForInquiry" },
+            { text: "Discard", callback_data: "discardWithoutUserForInquiry" },
+          ],
+        ],
+      },
+    }
+  );
+
+  if (sentMessage) {
+    ctx.session.lastMessageId = sentMessage.message_id;
+  }
+}
+
 module.exports = {
   measurement,
   BusinessTypeMenu,
@@ -194,4 +243,6 @@ module.exports = {
   confirmEditDiscardOnlyUserForPerf,
   confirmEditDiscardWithoutUser,
   confirmEditDiscardWithUser,
+  confirmEditDiscardWithOutUserForInquiry,
+  confirmEditDiscardWithUserForInquiry,
 };

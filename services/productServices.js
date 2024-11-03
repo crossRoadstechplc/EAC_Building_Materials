@@ -15,7 +15,8 @@ async function saveOffer(
   user_name,
   phone_number,
   business_type,
-  chat_id
+  chat_id,
+  description
 ) {
   try {
     const response = await axios.post(
@@ -32,7 +33,8 @@ async function saveOffer(
       user_name,
       phone_number,
       business_type,
-      chat_id
+      chat_id,
+      description
     );
     return response.data;
   } catch (error) {
