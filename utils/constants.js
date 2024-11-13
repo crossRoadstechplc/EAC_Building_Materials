@@ -60,14 +60,17 @@ async function BusinessTypeMenu(ctx) {
   }
 }
 
-function resetSession(session) {
-  session.productName = null;
-  session.productId = null;
-  session.propertiesQueue = [];
-  session.selectedValues = [];
-  session.currentPropertyIndex = 0;
-  session.step = null;
-  session.expired = false; // Mark the session as active
+function resetSession(ctx) {
+  ctx.session = {
+    productName: null,
+    phoneNumber: null,
+    productId: null,
+    propertiesQueue: [],
+    selectedValues: [],
+    currentPropertyIndex: 0,
+    step: null,
+    expired: false,
+  };
 }
 
 async function confirmEditDiscardOnlyUser(ctx, session) {
@@ -185,44 +188,17 @@ async function confirmEditDiscardWithUser(ctx, session) {
   }
 }
 
-async function confirmEditDiscardWithOutUserForInquiry(ctx, session) {
+async function confirmEditDiscardForInquiry(ctx, session) {
   sentMessage = await ctx.reply(
     `Please confirm the following information provided / የቀረበዉን መረጃ ያረጋግጡ:\nProduct Name / የምርት ስም: ${session.productName}\n` +
-      `Offer Type: ${session.offerType}` +
-      `\nDescription: ${session.productDescription}\n`,
+      `Description: ${session.productDescription}\n`,
     {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: "Confirm", callback_data: "confirmWithoutUserForInquiry" },
-            { text: "Edit", callback_data: "editWithoutUserForInquiry" },
-            { text: "Discard", callback_data: "discardWithoutUserForInquiry" },
-          ],
-        ],
-      },
-    }
-  );
-
-  if (sentMessage) {
-    ctx.session.lastMessageId = sentMessage.message_id;
-  }
-}
-
-async function confirmEditDiscardWithUserForInquiry(ctx, session) {
-  sentMessage = await ctx.reply(
-    `To complete posting offer verify your choices / ምዝገባ ለመጨረስ ምርጫዎን ያረጋግጡ:\nProduct Name / የምርት ስም: ${session.productName}\n` +
-      `Full Name / ስም: ${session.name}\n` +
-      `Business Type / የተሰማሩበት ንግድ: ${session.businessType}\n` +
-      `Phone number / ስልክ: ${session.phone}\n` +
-      `Offer Type: ${session.offerType}` +
-      `\nDescription: ${session.productDescription}`,
-    {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: "Confirm", callback_data: "confirmWithUserForInquiry" },
-            { text: "Edit", callback_data: "editWithUserForInquiry" },
-            { text: "Discard", callback_data: "discardWithoutUserForInquiry" },
+            { text: "Confirm", callback_data: "confirmForInquiry" },
+            { text: "Edit", callback_data: "editForInquiry" },
+            { text: "Discard", callback_data: "discardForInquiry" },
           ],
         ],
       },
@@ -243,6 +219,5 @@ module.exports = {
   confirmEditDiscardOnlyUserForPerf,
   confirmEditDiscardWithoutUser,
   confirmEditDiscardWithUser,
-  confirmEditDiscardWithOutUserForInquiry,
-  confirmEditDiscardWithUserForInquiry,
+  confirmEditDiscardForInquiry,
 };

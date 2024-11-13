@@ -18,8 +18,8 @@ const {
   confirmEditDiscardWithoutUser,
   confirmEditDiscardWithUser,
   confirmEditDiscardOnlyUserForPerf,
-  confirmEditDiscardWithOutUserForInquiry,
   confirmEditDiscardWithUserForInquiry,
+  confirmEditDiscardForInquiry,
 } = require("./constants");
 const { processEditChoices, EditUser } = require("./EditChoice");
 const {
@@ -27,7 +27,6 @@ const {
   confirmWithUser,
   confirmUser,
   confirmWithoutUserForInquiry,
-  confirmWithUserForInquiry,
 } = require("./Confirm");
 const { viewContact, viewFullContact } = require("./ViewContact");
 const {
@@ -55,7 +54,7 @@ function command(bot) {
 
   bot.start(async (ctx) => {
     ctx.session = {};
-
+    resetSession(ctx);
     const startPayload = ctx.startPayload;
     ctx.session.offerId = startPayload;
 
@@ -130,30 +129,14 @@ function command(bot) {
   });
 
   bot.action("post_inquiry", async (ctx) => {
+    ctx.session.inquiry = true;
     ctx.session.editOfferType = false;
     try {
       await ctx.telegram.deleteMessage(
         ctx.chat.id,
         ctx.callbackQuery.message.message_id
       );
-
-      const sentMessage = await ctx.reply(
-        "Please choose the offer type / እባክዎ አይነቱን ይምረጡ:",
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                { text: "BUY / ግዢ", callback_data: "buy_inquiry" },
-                { text: "SELL / ሽያጭ", callback_data: "sell_inquiry" },
-              ],
-            ],
-          },
-        }
-      );
-
-      if (sentMessage) {
-        ctx.session.lastMessageId = sentMessage.message_id;
-      }
+      GetProduct(bot, ctx);
     } catch (error) {
       console.error("Failed to delete message:", error);
     }
@@ -172,33 +155,6 @@ function command(bot) {
       await ctx.reply(
         "Sorry, there was an error processing your request. Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
       );
-    }
-  });
-
-  bot.action(["sell_inquiry", "buy_inquiry"], async (ctx) => {
-    ctx.session.editProduct = false;
-    await ctx.telegram.deleteMessage(
-      ctx.chat.id,
-      ctx.callbackQuery.message.message_id
-    );
-    if (ctx.session.editOfferType === true && ctx.session.NewUser === true) {
-      ctx.session.offerType =
-        ctx.callbackQuery.data === "sell_inquiry" ? "sell" : "buy";
-      confirmEditDiscardWithUserForInquiry(ctx, session);
-    } else if (ctx.session.editOfferType === true) {
-      ctx.session.offerType =
-        ctx.callbackQuery.data === "sell_inquiry" ? "sell" : "buy";
-      confirmEditDiscardWithOutUserForInquiry(ctx, session);
-    } else if (ctx.session.editOfferType === false) {
-      try {
-        ctx.session.inquiry = true;
-        ctx.session.offerType =
-          ctx.callbackQuery.data === "sell_inquiry" ? "sell" : "buy";
-
-        GetProduct(bot, ctx);
-      } catch (error) {
-        console.error("error getting products", error);
-      }
     }
   });
 
@@ -397,23 +353,15 @@ function command(bot) {
           ctx.reply("Failed to fetch property / መረጃውን ማግኘት አልተቻለም");
         }
       } else if (ctx.session.editProduct === true) {
-        confirmEditDiscardWithOutUserForInquiry(ctx, session);
+        confirmEditDiscardForInquiry(ctx, session);
       } else {
         try {
-          ctx.reply("enter the product descriptions: ");
+          ctx.reply("Enter Inquiry Message With Contact Information: ");
           session.step = "waitingForProductDescription";
         } catch (error) {
           console.error("error getting description: ", error);
         }
       }
-      // try {
-      //   const properties = await fetchPropertyByProduct(session.productId);
-      //   session.propertiesQueue = properties;
-      //   session.currentPropertyIndex = 0;
-      //   await processNextProperty(ctx);
-      // } catch (error) {
-      //   ctx.reply("Failed to fetch property / መረጃውን ማግኛት አልተቻለም");
-      // }
     } else if (data.startsWith("Preference_product_")) {
       const productId = parseInt(data.split("_")[2], 10); // Convert productId to an integer
 
@@ -864,16 +812,12 @@ function command(bot) {
 
       session.isNewUser = false;
       await processEditChoices(ctx);
-    } else if (data === "editWithoutUserForInquiry") {
+    } else if (data === "editForInquiry") {
       await ctx.telegram.deleteMessage(chatId, messageId);
-      session.isNewUser = false;
       await ctx.reply("Choose what you want to edit", {
         reply_markup: {
           inline_keyboard: [
-            [
-              { text: "Product Name", callback_data: "editProductName" },
-              { text: "Offer Type", callback_data: "editOfferType" },
-            ],
+            [{ text: "Product Name", callback_data: "editProductName" }],
             [{ text: "Description", callback_data: "editDescription" }],
           ],
         },
@@ -892,10 +836,10 @@ function command(bot) {
       await ctx.telegram.deleteMessage(chatId, messageId);
       BusinessTypeMenu(ctx);
       session.step = "waitingForEditedBusinessTypeForInquiry";
-    } else if (data === "discardWithoutUserForInquiry") {
+    } else if (data === "discardForInquiry") {
       await ctx.telegram.deleteMessage(chatId, messageId);
       ctx.reply("Discarded / ተሰርዟል");
-      resetSession(session);
+      resetSession(ctx);
     } else if (data === "editOfferType") {
       await ctx.telegram.deleteMessage(chatId, messageId);
       ctx.session.editOfferType = true;
@@ -935,7 +879,7 @@ function command(bot) {
         // Consistent property name
         confirmEditDiscardWithUserForInquiry(ctx, session);
       } else {
-        confirmEditDiscardWithOutUserForInquiry(ctx, session);
+        confirmEditDiscardForInquiry(ctx, session);
       }
     } else if (data === "editDescription") {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -945,23 +889,6 @@ function command(bot) {
       await ctx.telegram.deleteMessage(chatId, messageId);
       session.isNewUser = true;
       await processEditChoices(ctx);
-    } else if (data === "editWithUserForInquiry") {
-      await ctx.telegram.deleteMessage(chatId, messageId);
-      session.isNewUser = true;
-      await ctx.reply("Choose what you want to edit", {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: "User Name", callback_data: "editUsername" },
-              { text: "Phone Number", callback_data: "editPhoneNumber" },
-              { text: "Business Type", callback_data: "editBusinessType" },
-              { text: "Product Name", callback_data: "editProductName" },
-              { text: "Offer Type", callback_data: "editOfferType" },
-            ],
-            [{ text: "Description", callback_data: "editDescription" }],
-          ],
-        },
-      });
     } else if (data === "editUserToViewContact") {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
@@ -1082,7 +1009,7 @@ function command(bot) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
       ctx.reply("Discarded / ተሰርዟል");
-      resetSession(session);
+      resetSession(ctx);
     } else if (
       data === "Smallholder" ||
       data === "Commercial" ||
@@ -1211,10 +1138,7 @@ function command(bot) {
       await ctx.telegram.deleteMessage(chatId, messageId);
 
       await confirmWithUser(ctx, session);
-    } else if (data === "confirmWithUserForInquiry") {
-      await ctx.telegram.deleteMessage(chatId, messageId);
-      await confirmWithUserForInquiry(ctx, session);
-    } else if (data === "confirmWithoutUserForInquiry") {
+    } else if (data === "confirmForInquiry") {
       await ctx.telegram.deleteMessage(chatId, messageId);
       await confirmWithoutUserForInquiry(ctx, session);
     } else if (data === "confirmUser") {
@@ -1324,23 +1248,35 @@ function command(bot) {
           switch (session.step) {
             case "waitingForProductDescription":
               session.productDescription = text;
-              try {
-                const user = await checkUser(ctx.chat.id);
 
-                if (user) {
-                  confirmEditDiscardWithOutUserForInquiry(ctx, session);
-                } else {
-                  ctx.reply("Enter you name:");
-                  session.step = "waitingForName";
-                }
-              } catch (error) {}
+              // Regex pattern to match phone numbers (basic example)
+              const phoneRegex =
+                /(\+?\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/;
+
+              const phoneMatch = text.match(phoneRegex);
+              if (phoneMatch) {
+                session.phoneNumber = phoneMatch[0];
+              }
+
+              try {
+                confirmEditDiscardForInquiry(ctx, session);
+              } catch (error) {
+                console.error("Error getting description:", error);
+              }
               break;
             case "waitingForProductDescriptionEdit":
               session.productDescription = text;
-              if (session.isNewUser) {
-                confirmEditDiscardWithUserForInquiry(ctx, session);
-              } else {
-                confirmEditDiscardWithOutUserForInquiry(ctx, session);
+              const phoneRegexEdit =
+                /(\+?\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/;
+
+              const phoneMatchEdit = text.match(phoneRegexEdit);
+              if (phoneMatchEdit) {
+                session.phoneNumber = phoneMatchEdit[0];
+              }
+              try {
+                confirmEditDiscardForInquiry(ctx, session);
+              } catch (error) {
+                console.error("Error getting description:", error);
               }
               break;
             case "waitingForUserNameEdit":

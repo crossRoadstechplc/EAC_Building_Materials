@@ -1,5 +1,5 @@
 const { saveOffer } = require("../services/productServices");
-const { sendItemToGroup } = require("./SendtoGroup");
+const { sendItemToGroup, sendItemToGroupForInquiry } = require("./SendtoGroup");
 const { registerUser } = require("../services/userServices");
 const { resetSession } = require("./constants");
 const { session } = require("telegraf");
@@ -138,6 +138,39 @@ async function confirmUser(ctx, session) {
   }
 }
 
+async function confirmWithoutUserForInquiry(ctx, session) {
+  try {
+    const offerData = {
+      product_name: session.productName,
+      measurement: null,
+      quantity: null,
+      status: true,
+      sent: false,
+      offer_type: null,
+      user_name: null,
+      phone_number: session.phoneNumber,
+      business_type: null,
+      chat_id: ctx.chat.id,
+      description: session.productDescription,
+    };
+
+    const result = await saveOffer(offerData);
+
+    offerData.id = result.offer.id;
+
+    await sendItemToGroupForInquiry(ctx, offerData, session);
+
+    await ctx.reply("Offer posted successfully! / ምዝገባዉ ተሳክቶል!");
+
+    resetSession(ctx);
+  } catch (error) {
+    console.error("Error posting offer:", error);
+    await ctx.reply(
+      "An error occurred while posting your offer. Please try again later / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+    );
+  }
+}
+
 async function confirmWithUserForInquiry(ctx, session) {
   try {
     "name:", session.name;
@@ -169,8 +202,7 @@ async function confirmWithUserForInquiry(ctx, session) {
       result.offer["id"];
 
       offerData.id = result.offer["id"];
-
-      await sendItemToGroup(ctx, offerData, session);
+      await sendItemToGroupForInquiry(ctx, offerData, session);
       ctx.reply("Offer posted successfully! / ምዝገባዉ ተሳክቶል!");
       session.isNewUser = true;
       resetSession(ctx);
@@ -179,39 +211,6 @@ async function confirmWithUserForInquiry(ctx, session) {
     }
   } catch (error) {
     console.error("error registering user", error);
-  }
-}
-
-async function confirmWithoutUserForInquiry(ctx, session) {
-  try {
-    const offerData = {
-      product_name: session.productName,
-      measurement: null,
-      quantity: null,
-      status: true,
-      sent: false,
-      offer_type: session.offerType,
-      user_name: session.username,
-      phone_number: session.phoneNumber,
-      business_type: session.businessType,
-      chat_id: ctx.chat.id,
-      description: session.productDescription,
-    };
-
-    const result = await saveOffer(offerData);
-
-    offerData.id = result.offer.id;
-
-    await sendItemToGroup(ctx, offerData, session);
-
-    await ctx.reply("Offer posted successfully! / ምዝገባዉ ተሳክቶል!");
-
-    resetSession(ctx);
-  } catch (error) {
-    console.error("Error posting offer:", error);
-    await ctx.reply(
-      "An error occurred while posting your offer. Please try again later / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
-    );
   }
 }
 

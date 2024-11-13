@@ -11,6 +11,7 @@
     "dependencies": {
         "axios": "^1.7.2",
         "nodemon": "^3.1.4",
+        "spice": "file:",
         "telegraf": "^4.16.3",
         "telegraf-session-local": "^2.1.1"
     }

@@ -1,6 +1,5 @@
 async function sendItemToGroup(ctx, offerData, session) {
   const botUsername = "https://t.me/EACBuildingMaterialsBot";
-  // const botUsername = "https://t.me/ykftestbot";
 
   offerData;
 
@@ -34,4 +33,30 @@ async function sendItemToGroup(ctx, offerData, session) {
   }
 }
 
-module.exports = { sendItemToGroup };
+async function sendItemToGroupForInquiry(ctx, offerData, session) {
+  const botUsername = "https://t.me/EACBuildingMaterialsBot";
+  offerData;
+
+  const botLink = `${botUsername}?start=${offerData.id}`;
+  offerData.id;
+
+  try {
+    let topicMessageId = 9612; //new
+    // let topicMessageId = 331; //old one
+
+    await ctx.telegram.sendMessage(
+      // -1002078753064, //old one
+      -1001737871127, //new one
+      `${session.productName}\n` + `${session.productDescription}\n`,
+      {
+        reply_to_message_id: topicMessageId,
+      }
+    );
+    ("Posted");
+  } catch (error) {
+    console.error("Error sending item details to group:", error);
+    throw error;
+  }
+}
+
+module.exports = { sendItemToGroup, sendItemToGroupForInquiry };
