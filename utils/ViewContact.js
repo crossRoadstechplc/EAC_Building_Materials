@@ -36,7 +36,7 @@ async function viewContact(bot, ctx) {
   } catch (error) {
     console.error("Error fetching offer:", error);
     await ctx.reply(
-      "Sorry, an error occurred while fetching the offer details. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+      "Sorry, an error occurred while fetching the offer details. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
     );
   }
 }
@@ -104,7 +104,7 @@ async function viewFullContact(bot, ctx) {
   } catch (error) {
     console.error("Error fetching offer:", error);
     await ctx.reply(
-      "Sorry, an error occurred while fetching the offer details. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+      "Sorry, an error occurred while fetching the offer details. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
     );
   }
 }

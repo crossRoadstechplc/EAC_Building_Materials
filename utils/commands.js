@@ -356,7 +356,7 @@ function command(bot) {
         confirmEditDiscardForInquiry(ctx, session);
       } else {
         try {
-          ctx.reply("Enter Inquiry Message With Contact Information: ");
+          ctx.reply("Enter Inquiry Message With Contact Information / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ: ");
           session.step = "waitingForProductDescription";
         } catch (error) {
           console.error("error getting description: ", error);
@@ -883,7 +883,7 @@ function command(bot) {
       }
     } else if (data === "editDescription") {
       await ctx.telegram.deleteMessage(chatId, messageId);
-      ctx.reply("enter the product descriptions: ");
+      ctx.reply("Enter Inquiry Message With Contact Information / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ: ");
       session.step = "waitingForProductDescriptionEdit";
     } else if (data === "editWithUser") {
       await ctx.telegram.deleteMessage(chatId, messageId);
@@ -1103,7 +1103,7 @@ function command(bot) {
         } catch (error) {
           console.error("Error handling accept callback:", error);
           ctx.reply(
-            "An error occurred while processing your request. Please try again later. / ጥያቄዎን ማስተናገድ አልተቻለም። እባክዎ በድጋሚ ይሞክሩ"
+            "An error occurred while processing your request. Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
           );
         }
       } else {
@@ -1112,7 +1112,7 @@ function command(bot) {
         } catch (error) {
           console.error("Error handling accept callback:", error);
           ctx.reply(
-            "An error occurred while processing your request. Please try again later. / ጥያቄዎን ማስተናገድ አልተቻለም። እባክዎ በድጋሚ ይሞክሩ"
+            "An error occurred while processing your request. Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
           );
         }
       }
@@ -1127,7 +1127,7 @@ function command(bot) {
       } catch (error) {
         console.error("Error handling accept callback:", error);
         ctx.reply(
-          "An error occurred while processing your request. Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+          "An error occurred while processing your request. Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
         );
       }
     } else if (data === "confirmWithoutUser") {
@@ -1337,7 +1337,7 @@ function command(bot) {
               } catch (error) {
                 console.error("Error checking user registration:", error);
                 ctx.reply(
-                  "An error occurred while checking user registration. Please try again later. / ምዝገባለይ ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+                  "An error occurred while checking user registration. Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
                 );
               }
               break;

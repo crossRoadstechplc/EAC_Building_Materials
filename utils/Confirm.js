@@ -53,7 +53,7 @@ async function confirmWithoutUser(ctx, session) {
   } catch (error) {
     console.error("Error posting offer:", error);
     await ctx.reply(
-      "An error occurred while posting your offer. Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+      "An error occurred while posting your offer. Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
     );
   }
 }
@@ -119,7 +119,7 @@ async function confirmWithUser(ctx, session) {
       console.error("error posting offer");
     }
   } catch (error) {
-    console.error("error registering user / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ", error);
+    console.error("error registering user", error);
   }
 }
 
@@ -134,7 +134,7 @@ async function confirmUser(ctx, session) {
     );
   } catch (error) {
     console.error("error adding user ", error);
-    ctx.reply("error registering user / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ");
+    ctx.reply("error registering user / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ");
   }
 }
 
@@ -166,7 +166,7 @@ async function confirmWithoutUserForInquiry(ctx, session) {
   } catch (error) {
     console.error("Error posting offer:", error);
     await ctx.reply(
-      "An error occurred while posting your offer. Please try again later / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+      "An error occurred while posting your offer. Please try again later / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
     );
   }
 }
