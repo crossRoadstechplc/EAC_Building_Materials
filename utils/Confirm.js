@@ -53,7 +53,7 @@ async function confirmWithoutUser(ctx, session) {
   } catch (error) {
     console.error("Error posting offer:", error);
     await ctx.reply(
-      "An error occurred while posting your offer. Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
+      "An error occurred while posting your offer. Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
     );
   }
 }
@@ -119,7 +119,7 @@ async function confirmWithUser(ctx, session) {
       console.error("error posting offer");
     }
   } catch (error) {
-    console.error("error registering user", error);
+    console.error("error registering user / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ", error);
   }
 }
 
@@ -134,7 +134,7 @@ async function confirmUser(ctx, session) {
     );
   } catch (error) {
     console.error("error adding user ", error);
-    ctx.reply("error registering user / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ");
+    ctx.reply("error registering user / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ");
   }
 }
 
@@ -146,7 +146,7 @@ async function confirmWithoutUserForInquiry(ctx, session) {
       quantity: null,
       status: true,
       sent: false,
-      offer_type: null,
+      offer_type: session.offerType,
       user_name: null,
       phone_number: session.phoneNumber,
       business_type: null,
@@ -182,7 +182,7 @@ async function confirmWithUserForInquiry(ctx, session) {
       session.name,
       session.businessType,
       1,
-      session.phone,
+      session.phoneNumber,
       ctx.chat.id
     );
     try {
@@ -193,7 +193,7 @@ async function confirmWithUserForInquiry(ctx, session) {
         sent: false,
         offer_type: session.offerType,
         user_name: session.name,
-        phone_number: session.phone,
+        phone_number: session.phoneNumber,
         business_type: session.businessType,
         chat_id: ctx.chat.id,
       };

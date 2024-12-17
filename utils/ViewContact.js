@@ -5,13 +5,19 @@ async function viewContact(bot, ctx) {
   const offerId = ctx.session.offerId;
   try {
     const offers = await fetchOffer(offerId);
-    let message = `Product Name: ${offers.product_name}`;
+    let message = `I Want To: ${offers.offer_type}\nProduct Name: ${offers.product_name}`;
 
     if (offers.grade) {
       message += `\nGrade: ${offers.grade}`;
     }
     if (offers.brand_name) {
       message += `\nBrand Name: ${offers.brand_name}`;
+    }
+    if (offers.type) {
+      message += `\nType: ${offers.type}`;
+    }
+    if (offers.size) {
+      message += `\nSize: ${offers.size}`;
     }
 
     if (offers.class) {
@@ -23,8 +29,12 @@ async function viewContact(bot, ctx) {
     if (offers.process) {
       message += `\nProcess: ${offers.process}`;
     }
-
-    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nOffer Type: ${offers.offer_type}`;
+    if (offers.quantity) {
+      message += `\nQuantity: ${offers.quantity} ${offers.measurement}`;
+    }
+    if (offers.description) {
+      message += `\nDescription: ${offers.description}`;
+    }
 
     await ctx.reply(message, {
       reply_markup: {
@@ -36,7 +46,7 @@ async function viewContact(bot, ctx) {
   } catch (error) {
     console.error("Error fetching offer:", error);
     await ctx.reply(
-      "Sorry, an error occurred while fetching the offer details. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
+      "Sorry, an error occurred while fetching the offer details. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
     );
   }
 }
@@ -104,7 +114,7 @@ async function viewFullContact(bot, ctx) {
   } catch (error) {
     console.error("Error fetching offer:", error);
     await ctx.reply(
-      "Sorry, an error occurred while fetching the offer details. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
+      "Sorry, an error occurred while fetching the offer details. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
     );
   }
 }

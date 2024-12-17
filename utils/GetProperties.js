@@ -63,7 +63,7 @@ async function processProperty(
   } catch (error) {
     console.error("Failed to fetch property values:", error);
     ctx.reply(
-      `An error occurred while fetching values . Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ`
+      `An error occurred while fetching values . Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ`
     );
   }
 }
@@ -126,7 +126,7 @@ async function processPropertyForEdit(
   } catch (error) {
     console.error("Failed to fetch property values:", error);
     ctx.reply(
-      `An error occurred while fetching values . Please try again later. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ`
+      `An error occurred while fetching values . Please try again later. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ`
     );
   }
 }

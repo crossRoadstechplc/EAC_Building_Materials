@@ -1,5 +1,6 @@
 async function sendItemToGroup(ctx, offerData, session) {
   const botUsername = "https://t.me/EACBuildingMaterialsBot";
+  // const botUsername = "https://t.me/ykftestbot";
 
   offerData;
 
@@ -34,6 +35,7 @@ async function sendItemToGroup(ctx, offerData, session) {
 }
 
 async function sendItemToGroupForInquiry(ctx, offerData, session) {
+  // const botUsername = "https://t.me/ykftestbot";
   const botUsername = "https://t.me/EACBuildingMaterialsBot";
   offerData;
 
@@ -49,6 +51,9 @@ async function sendItemToGroupForInquiry(ctx, offerData, session) {
       -1001737871127, //new one
       `${session.productName}\n` + `${session.productDescription}\n`,
       {
+        reply_markup: {
+          inline_keyboard: [[{ text: "VIEW CONTACT", url: botLink }]],
+        },
         reply_to_message_id: topicMessageId,
       }
     );

@@ -189,9 +189,34 @@ async function confirmEditDiscardWithUser(ctx, session) {
 }
 
 async function confirmEditDiscardForInquiry(ctx, session) {
+  session.editInquiryWithPhone = false;
   sentMessage = await ctx.reply(
     `Please confirm the following information provided / የቀረበዉን መረጃ ያረጋግጡ:\nProduct Name / የምርት ስም: ${session.productName}\n` +
       `Description: ${session.productDescription}\n`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "Confirm", callback_data: "confirmForInquiry" },
+            { text: "Edit", callback_data: "editForInquiry" },
+            { text: "Discard", callback_data: "discardForInquiry" },
+          ],
+        ],
+      },
+    }
+  );
+
+  if (sentMessage) {
+    ctx.session.lastMessageId = sentMessage.message_id;
+  }
+}
+
+async function confirmEditDiscardForInquiryWithPhone(ctx, session) {
+  session.editInquiryWithPhone = true;
+  sentMessage = await ctx.reply(
+    `Please confirm the following information provided / የቀረበዉን መረጃ ያረጋግጡ:\nProduct Name / የምርት ስም: ${session.productName}\n` +
+      `Description: ${session.productDescription}\n` +
+      `Phone Number: ${session.phoneNumber}`,
     {
       reply_markup: {
         inline_keyboard: [
@@ -220,4 +245,5 @@ module.exports = {
   confirmEditDiscardWithoutUser,
   confirmEditDiscardWithUser,
   confirmEditDiscardForInquiry,
+  confirmEditDiscardForInquiryWithPhone,
 };
