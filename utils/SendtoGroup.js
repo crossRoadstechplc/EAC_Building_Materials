@@ -35,12 +35,20 @@ async function sendItemToGroup(ctx, offerData, session) {
 }
 
 async function sendItemToGroupForInquiry(ctx, offerData, session) {
-  // const botUsername = "https://t.me/ykftestbot";
   const botUsername = "https://t.me/EACBuildingMaterialsBot";
+  // const botUsername = "https://t.me/ykftestbot";
   offerData;
+
+  const phoneRegex1 =
+    /(\+?\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g;
 
   const botLink = `${botUsername}?start=${offerData.id}`;
   offerData.id;
+
+  const maskedDescription = session.productDescription.replace(
+    phoneRegex1,
+    " "
+  );
 
   try {
     let topicMessageId = 9612; //new
@@ -49,7 +57,7 @@ async function sendItemToGroupForInquiry(ctx, offerData, session) {
     await ctx.telegram.sendMessage(
       // -1002078753064, //old one
       -1001737871127, //new one
-      `${session.productName}\n` + `${session.productDescription}\n`,
+      `${session.productName}\n${maskedDescription}\n`,
       {
         reply_markup: {
           inline_keyboard: [[{ text: "VIEW CONTACT", url: botLink }]],
@@ -57,11 +65,9 @@ async function sendItemToGroupForInquiry(ctx, offerData, session) {
         reply_to_message_id: topicMessageId,
       }
     );
-    ("Posted");
   } catch (error) {
     console.error("Error sending item details to group:", error);
     throw error;
   }
 }
-
 module.exports = { sendItemToGroup, sendItemToGroupForInquiry };

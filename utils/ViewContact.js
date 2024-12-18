@@ -3,38 +3,46 @@ const { checkUser } = require("../services/userServices");
 
 async function viewContact(bot, ctx) {
   const offerId = ctx.session.offerId;
+  const phoneRegex =
+    /(\+?\d{1,3})?[-.\s]?\(?\d{1,4}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g;
+
+  const replaceNull = (value) =>
+    value == null || value === "" ? "N/A" : value;
+
   try {
     const offers = await fetchOffer(offerId);
-    let message = `I Want To: ${offers.offer_type}\nProduct Name: ${offers.product_name}`;
 
-    if (offers.grade) {
-      message += `\nGrade: ${offers.grade}`;
-    }
-    if (offers.brand_name) {
-      message += `\nBrand Name: ${offers.brand_name}`;
-    }
-    if (offers.type) {
-      message += `\nType: ${offers.type}`;
-    }
-    if (offers.size) {
-      message += `\nSize: ${offers.size}`;
-    }
+    // Replace phone numbers in the description if they exist
+    const sanitizedDescription = offers.description
+      ? offers.description.replace(phoneRegex, " ")
+      : "N/A";
 
-    if (offers.class) {
-      message += `\nClass: ${offers.class}`;
-    }
-    if (offers.region) {
-      message += `\nRegion: ${offers.region}`;
-    }
-    if (offers.process) {
-      message += `\nProcess: ${offers.process}`;
-    }
-    if (offers.quantity) {
-      message += `\nQuantity: ${offers.quantity} ${offers.measurement}`;
-    }
-    if (offers.description) {
-      message += `\nDescription: ${offers.description}`;
-    }
+    // Define property mappings
+    const properties = [
+      { name: "Brand Name" },
+      { name: "Type" },
+      { name: "Size" },
+      { name: "Quantity" },
+      { name: "Measurement" },
+      { name: "Description" },
+    ];
+
+    // Map properties to their values in the offer
+    let propertyDetails = properties
+      .map((prop) => {
+        const propName = prop.name.toLowerCase().replace(" ", "_");
+        // Use sanitizedDescription if mapping "Description"
+        if (propName === "description") {
+          return `${prop.name}: ${sanitizedDescription}`;
+        }
+        return `${prop.name}: ${replaceNull(offers[propName])}`;
+      })
+      .join("\n");
+
+    // Construct the message
+    let message = `I Want To: ${replaceNull(
+      offers.offer_type
+    )}\nProduct Name: ${replaceNull(offers.product_name)}\n${propertyDetails}`;
 
     await ctx.reply(message, {
       reply_markup: {
