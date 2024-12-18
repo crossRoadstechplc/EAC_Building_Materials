@@ -51,42 +51,59 @@ async function viewContact(bot, ctx) {
   }
 }
 
-//ViewContact
-
 async function viewFullContact(bot, ctx) {
   const callbackData = ctx.update.callback_query.data;
-  //   const offerId = callbackData.split("_")[1];
   const offerId = ctx.session.offerId;
+
   try {
     const offers = await fetchOffer(offerId);
     const user = await checkUser(ctx.chat.id);
 
-    let message = `I Want To: ${offers.offer_type}\nProduct Name: ${offers.product_name}\nGrade: ${offers.grade}`;
+    const replaceNull = (value) =>
+      value == null || value === "" ? "N/A" : value;
+
+    const quantity = replaceNull(offers.quantity);
+    const measurement = replaceNull(offers.measurement);
+    const quantityMessage =
+      quantity === "N/A" && measurement === "N/A"
+        ? "N/A"
+        : `${quantity} ${measurement}`;
+
+    let message = `I Want To: ${replaceNull(
+      offers.offer_type
+    )}\nProduct Name: ${replaceNull(offers.product_name)}\nGrade: ${replaceNull(
+      offers.grade
+    )}`;
 
     if (offers.class) {
-      message += `\nClass: ${offers.class}`;
+      message += `\nClass: ${replaceNull(offers.class)}`;
     }
     if (offers.region) {
-      message += `\nRegion: ${offers.region}`;
+      message += `\nRegion: ${replaceNull(offers.region)}`;
     }
     if (offers.description) {
-      message += `\nDescription: ${offers.description}`;
+      message += `\nDescription: ${replaceNull(offers.description)}`;
     }
 
-    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
+    message += `\nQuantity: ${quantityMessage}\nPhone number: ${replaceNull(
+      offers.phone_number
+    )}\nUsername: ${replaceNull(
+      offers.user_name
+    )}\nBusiness type: ${replaceNull(offers.business_type)}`;
 
     await ctx.reply(message);
+
     try {
       const interactionData = {
-        poster_name: offers.user_name,
-        poster_phone_number: offers.phone_number,
-        poster_business_type: offers.business_type,
-        poster_chat_id: offers.chat_id,
-        viewer_name: user.name,
-        viewer_phone_number: user.contact_information,
-        viewer_business_type: user.business_type,
-        viewer_chat_id: user.chat_id,
-        offerId: offers.id,
+        poster_name: replaceNull(offers.user_name),
+        poster_phone_number: replaceNull(offers.phone_number),
+        poster_business_type: replaceNull(offers.business_type),
+        poster_chat_id: replaceNull(offers.chat_id),
+        viewer_name: replaceNull(user.name),
+        viewer_phone_number: replaceNull(user.contact_information),
+        viewer_business_type: replaceNull(user.business_type),
+        viewer_chat_id: replaceNull(user.chat_id),
+        offerId: replaceNull(offers.id),
       };
 
       await saveInteraction(
