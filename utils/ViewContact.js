@@ -51,70 +51,62 @@ async function viewContact(bot, ctx) {
   }
 }
 
+//ViewContact
+
 async function viewFullContact(bot, ctx) {
   const callbackData = ctx.update.callback_query.data;
+  //   const offerId = callbackData.split("_")[1];
   const offerId = ctx.session.offerId;
-
   try {
-    const user = await checkUser(ctx.chat.id);
     const offers = await fetchOffer(offerId);
-    if (offers.product_name) {
-      let message = `Product Name: ${offers.product_name}`;
+    const user = await checkUser(ctx.chat.id);
 
-      if (offers.grade) {
-        message += `\nGrade: ${offers.grade}`;
-      }
-      if (offers.brand_name) {
-        message += `\nBrand Name: ${offers.brand_name}`;
-      }
+    let message = `I Want To: ${offers.offer_type}\nProduct Name: ${offers.product_name}\nGrade: ${offers.grade}`;
 
-      if (offers.class) {
-        message += `\nClass: ${offers.class}`;
-      }
-      if (offers.region) {
-        message += `\nRegion: ${offers.region}`;
-      }
-      if (offers.process) {
-        message += `\nProcess: ${offers.process}`;
-      }
+    if (offers.class) {
+      message += `\nClass: ${offers.class}`;
+    }
+    if (offers.region) {
+      message += `\nRegion: ${offers.region}`;
+    }
+    if (offers.description) {
+      message += `\nDescription: ${offers.description}`;
+    }
 
-      message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nOffer Type: ${offers.offer_type}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
+    message += `\nQuantity: ${offers.quantity} ${offers.measurement}\nPhone number: ${offers.phone_number}\nUsername: ${offers.user_name}\nBusiness type: ${offers.business_type}`;
 
-      await ctx.reply(message);
-      try {
-        const interactionData = {
-          poster_name: offers.user_name,
-          poster_phone_number: offers.phone_number,
-          poster_business_type: offers.business_type,
-          poster_chat_id: offers.chat_id,
-          viewer_name: user.name,
-          viewer_phone_number: user.contact_information,
-          viewer_business_type: user.business_type,
-          viewer_chat_id: user.chat_id,
-          offerId: offers.id,
-        };
+    await ctx.reply(message);
+    try {
+      const interactionData = {
+        poster_name: offers.user_name,
+        poster_phone_number: offers.phone_number,
+        poster_business_type: offers.business_type,
+        poster_chat_id: offers.chat_id,
+        viewer_name: user.name,
+        viewer_phone_number: user.contact_information,
+        viewer_business_type: user.business_type,
+        viewer_chat_id: user.chat_id,
+        offerId: offers.id,
+      };
 
-        await saveInteraction(
-          interactionData.poster_name,
-          interactionData.poster_phone_number,
-          interactionData.poster_business_type,
-          interactionData.poster_chat_id,
-          interactionData.viewer_name,
-          interactionData.viewer_phone_number,
-          interactionData.viewer_business_type,
-          interactionData.viewer_chat_id,
-          interactionData.offerId
-        );
-      } catch (error) {
-        console.error("Error saving interaction:", error);
-      }
-    } else {
-      ctx.reply("No contact found / ስልኩ አልተገኘም");
+      await saveInteraction(
+        interactionData.poster_name,
+        interactionData.poster_phone_number,
+        interactionData.poster_business_type,
+        interactionData.poster_chat_id,
+        interactionData.viewer_name,
+        interactionData.viewer_phone_number,
+        interactionData.viewer_business_type,
+        interactionData.viewer_chat_id,
+        interactionData.offerId
+      );
+    } catch (error) {
+      console.error("Error saving interaction:", error);
     }
   } catch (error) {
     console.error("Error fetching offer:", error);
     await ctx.reply(
-      "Sorry, an error occurred while fetching the offer details. / ችግር ስለተፈጠረ በድጋሚ ይሞክሩ"
+      "Sorry, an error occurred while fetching the offer details. / ይቅርታ፣ ጥያቄዎ አልተሳካም። እባክዎ ትንሽ ቆይተው ይሞክሩ"
     );
   }
 }

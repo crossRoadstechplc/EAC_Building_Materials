@@ -139,6 +139,7 @@ async function confirmUser(ctx, session) {
 }
 
 async function confirmWithoutUserForInquiry(ctx, session) {
+  console.log("Without");
   try {
     const offerData = {
       product_name: session.productName,
@@ -147,11 +148,11 @@ async function confirmWithoutUserForInquiry(ctx, session) {
       status: true,
       sent: false,
       offer_type: session.offerType,
-      user_name: null,
+      user_name: session.username || null,
       phone_number: session.phoneNumber,
-      business_type: null,
       chat_id: ctx.chat.id,
       description: session.productDescription,
+      business_type: session.business_type,
     };
 
     const result = await saveOffer(offerData);

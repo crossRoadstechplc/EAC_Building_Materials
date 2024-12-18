@@ -1324,9 +1324,16 @@ function command(bot) {
               session.productDescription = text;
 
               const user = await checkUser(ctx.chat.id);
+              console.log(user);
               if (user) {
                 if (user.contact_information) {
                   session.phoneNumber = user.contact_information;
+                }
+                if (user.name) {
+                  session.username = user.name;
+                }
+                if (user.business_type) {
+                  session.business_type = user.business_type;
                 }
                 try {
                   confirmEditDiscardForInquiry(ctx, session);
